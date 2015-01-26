@@ -4,6 +4,23 @@
 *.fq
 *.sam
 *.maf
+*.pyc
+
+*/*.pyc
+*/*.fasta
+*/*.fastq
+*/*.fa
+*/*.fq
+*/*.sam
+*/*.maf
+
+*/*/*.fasta
+*/*/*.fastq
+*/*/*.fa
+*/*/*.fq
+*/*/*.sam
+*/*/*.maf
+*/*/*.pyc
 
 reference-genomes/*
 !reference-genomes/*.tar.gz
@@ -12,3 +29,9 @@ aligners/
 temp/
 index/
 tools/
+
+evaluation/*
+aligners/*
+temp/*
+index/*
+tools/*

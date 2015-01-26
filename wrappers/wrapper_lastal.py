@@ -10,16 +10,29 @@ import subprocess;
 import multiprocessing;
 
 import basicdefines;
+import fastqparser;
 
-ALIGNER_URL = 'https://github.com/isovic/graphmap.git';
-ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap/bin/Linux-x64/';
-BIN = 'graphmap';
-MAPPER_NAME = 'GraphMap';
+ALIGNER_URL = 'http://last.cbrc.jp/last-534.zip';
 
-# ALIGNER_PATH = SCRIPT_PATH + '/../../../graphmap/bin';
-# BIN = 'graphmap-not_release';
+ALIGNER_PATH = SCRIPT_PATH + '/../aligners/last-534/src';
+BIN = 'lastal';
+MAPPER_NAME = 'LAST';
 
 
+
+# LAST's MAF to SAM conversion script doesn't include the SAM header lines which are needed for
+# some downstream analyses. This function extracts the reference and formats it to SAM format.
+def get_sam_header(reference_file):
+	[headers, seqs, quals] = fastqparser.read_fastq(reference_file);
+	
+	line = '';
+	
+	i = 0;
+	while i < len(headers):
+		line += '@SQ\tSN:%s\tLN:%d\n' % (headers[i], len(seqs[i]));
+		i += 1;
+	
+	return line;
 
 # Function 'run' should provide a standard interface for running a mapper. Given input parameters, it should run the
 # alignment process, and convert any custom output results to the SAM format. Function should return a string with the
@@ -34,19 +47,19 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	num_threads = multiprocessing.cpu_count();
 
 	if ((machine_name.lower() == 'illumina') or (machine_name.lower() == 'roche')):
-		parameters = '-x illumina -v 5 -b 4 -B 0';
+		parameters = '-v ';
 
 	elif ((machine_name.lower() == 'pacbio')):
-		parameters = '-v 5 -b 4 -B 0';
+		parameters = '-v -q 1 -r 1 -a 1 -b 1';
 
 	elif ((machine_name.lower() == 'nanopore')):
-		parameters = '-x nanopore -v 5 -b 4 -B 0';
+		parameters = '-v -q 1 -r 1 -a 1 -b 1';
 
 	elif ((machine_name.lower() == 'debug')):
-		parameters = '-x nanopore -v 5 -C -B 0 -j 11 -v 7 -y 31676 -n 1 -t 1';
+		parameters = '-v ';
 
 	else:			# default
-		parameters = '-v 5 -b 4 -B 0';
+		parameters = '-v ';
 
 
 
@@ -54,22 +67,45 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 		output_filename = '%s-%s' % (MAPPER_NAME, output_suffix);
 	else:
 		output_filename = MAPPER_NAME;
+
 	
+
+	reads_fasta = reads_file;
 	reads_basename = os.path.splitext(os.path.basename(reads_file))[0];
+	maf_file = '%s/%s.maf' % (output_path, output_filename);
 	sam_file = '%s/%s.sam' % (output_path, output_filename);
 	memtime_file = '%s/%s.memtime' % (output_path, output_filename);
 	memtime_file_index = '%s/%s-index.memtime' % (output_path, output_filename);
-	
+	memtime_file_maftosam = '%s/%s-maftosam.memtime' % (output_path, output_filename);
+	reference_db_file = reference_file + '.db';
+
+	# Check if the given input file is a FASTA or FASTQ, and convert to FASTA if necessary.
+	if (reads_file[-1] == 'q'):
+		sys.stderr.write('[%s wrapper] Converting FASTQ to FASTA...\n' % (MAPPER_NAME));
+		reads_fasta = reads_file[0:-1] + 'a';
+		fastqparser.convert_to_fasta(reads_file, reads_fasta);
+		sys.stderr.write('\n');
+
 	# Run the indexing process, and measure execution time and memory.
 	sys.stderr.write('[%s wrapper] Generating index...\n' % (MAPPER_NAME));
-	command = '%s %s/%s -I -r %s' % (basicdefines.measure_command(memtime_file_index), ALIGNER_PATH, BIN, reference_file);
+	command = '%s %s/lastdb %s %s' % (basicdefines.measure_command(memtime_file_index), ALIGNER_PATH, reference_db_file, reference_file);
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
 	subprocess.call(command, shell=True);
 	sys.stderr.write('\n\n');
 
 	# Run the alignment process, and measure execution time and memory.
 	sys.stderr.write('[%s wrapper] Running %s...\n' % (MAPPER_NAME, MAPPER_NAME));
-	command = '%s %s/%s %s -r %s -d %s -o %s' % (basicdefines.measure_command(memtime_file), ALIGNER_PATH, BIN, parameters, reference_file, reads_file, sam_file);
+	command = '%s %s/%s %s %s %s > %s' % (basicdefines.measure_command(memtime_file), ALIGNER_PATH, BIN, parameters, reference_db_file, reads_fasta, maf_file);
+	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
+	subprocess.call(command, shell=True);
+	sys.stderr.write('\n\n');
+
+	# Run the alignment process, and measure execution time and memory.
+	sys.stderr.write('[%s wrapper] Converting the output MAF to SAM file...\n' % (MAPPER_NAME));
+	fp = open(sam_file, 'w');
+	fp.write(get_sam_header(reference_file));
+	fp.close();
+	command = '%s %s/../scripts/maf-convert.py sam %s >> %s' % (basicdefines.measure_command(memtime_file_maftosam), ALIGNER_PATH, maf_file, sam_file);
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
 	subprocess.call(command, shell=True);
 	sys.stderr.write('\n\n');
@@ -84,8 +120,13 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 # root privileges.
 def download_and_install():
 	sys.stderr.write('[%s wrapper] Started installation of %s.\n' % (MAPPER_NAME, MAPPER_NAME));
-	sys.stderr.write('[%s wrapper] Cloning git repository.\n' % (MAPPER_NAME));
-	command = 'cd %s; git clone %s' % (basicdefines.ALIGNERS_PATH_ROOT_ABS, ALIGNER_URL);
+	sys.stderr.write('[%s wrapper] Using wget to download the aligner.\n' % (MAPPER_NAME));
+	command = 'cd %s; wget %s; unzip %s' % (basicdefines.ALIGNERS_PATH_ROOT_ABS, ALIGNER_URL, os.path.basename(ALIGNER_URL));
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
+	sys.stderr.write('[%s wrapper] Running make.\n' % (MAPPER_NAME));
+	command = 'cd %s/..; make' % (ALIGNER_PATH);
 	subprocess.call(command, shell='True');
 	sys.stderr.write('\n');
 

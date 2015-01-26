@@ -11,13 +11,10 @@ import multiprocessing;
 
 import basicdefines;
 
-ALIGNER_URL = 'https://github.com/isovic/graphmap.git';
-ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap/bin/Linux-x64/';
-BIN = 'graphmap';
-MAPPER_NAME = 'GraphMap';
-
-# ALIGNER_PATH = SCRIPT_PATH + '/../../../graphmap/bin';
-# BIN = 'graphmap-not_release';
+ALIGNER_URL = 'https://github.com/PacificBiosciences/blasr.git';
+ALIGNER_PATH = SCRIPT_PATH + '/../aligners/blasr';
+BIN = 'alignment/bin/blasr';
+MAPPER_NAME = 'BLASR';
 
 
 
@@ -34,19 +31,19 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	num_threads = multiprocessing.cpu_count();
 
 	if ((machine_name.lower() == 'illumina') or (machine_name.lower() == 'roche')):
-		parameters = '-x illumina -v 5 -b 4 -B 0';
+		parameters = '-nproc %s -sam -bestn 1 -minMatch 7' % str(num_threads);
 
 	elif ((machine_name.lower() == 'pacbio')):
-		parameters = '-v 5 -b 4 -B 0';
+		parameters = '-nproc %s -sam -bestn 1' % str(num_threads);
 
 	elif ((machine_name.lower() == 'nanopore')):
-		parameters = '-x nanopore -v 5 -b 4 -B 0';
+		parameters = '-nproc %s -sam -bestn 1' % str(num_threads);
 
 	elif ((machine_name.lower() == 'debug')):
-		parameters = '-x nanopore -v 5 -C -B 0 -j 11 -v 7 -y 31676 -n 1 -t 1';
+		parameters = '-nproc %s -sam -bestn 1' % str(num_threads);
 
 	else:			# default
-		parameters = '-v 5 -b 4 -B 0';
+		parameters = '-nproc %s -sam -bestn 1' % str(num_threads);
 
 
 
@@ -62,14 +59,14 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	
 	# Run the indexing process, and measure execution time and memory.
 	sys.stderr.write('[%s wrapper] Generating index...\n' % (MAPPER_NAME));
-	command = '%s %s/%s -I -r %s' % (basicdefines.measure_command(memtime_file_index), ALIGNER_PATH, BIN, reference_file);
+	command = '%s %s/alignment/bin/sawriter %s.blasrsa %s' % (basicdefines.measure_command(memtime_file_index), ALIGNER_PATH, reference_file, reference_file);
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
 	subprocess.call(command, shell=True);
 	sys.stderr.write('\n\n');
 
 	# Run the alignment process, and measure execution time and memory.
 	sys.stderr.write('[%s wrapper] Running %s...\n' % (MAPPER_NAME, MAPPER_NAME));
-	command = '%s %s/%s %s -r %s -d %s -o %s' % (basicdefines.measure_command(memtime_file), ALIGNER_PATH, BIN, parameters, reference_file, reads_file, sam_file);
+	command = '%s %s/%s %s %s %s -sa %s.blasrsa -out %s' % (basicdefines.measure_command(memtime_file), ALIGNER_PATH, BIN, reads_file, reference_file, parameters, reference_file, sam_file);
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
 	subprocess.call(command, shell=True);
 	sys.stderr.write('\n\n');
@@ -86,6 +83,25 @@ def download_and_install():
 	sys.stderr.write('[%s wrapper] Started installation of %s.\n' % (MAPPER_NAME, MAPPER_NAME));
 	sys.stderr.write('[%s wrapper] Cloning git repository.\n' % (MAPPER_NAME));
 	command = 'cd %s; git clone %s' % (basicdefines.ALIGNERS_PATH_ROOT_ABS, ALIGNER_URL);
+	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
+	yes_no = raw_input("[%s wrapper] requires some libraries to be installed. Continue? [y/n] " % (MAPPER_NAME));
+	if (yes_no != 'y'):
+		return;
+
+	sys.stderr.write('[%s wrapper] Please note that the installation of these libraries assumes that the OS is Ubuntu/Debian based.\n' % (MAPPER_NAME));
+	sys.stderr.write('[%s wrapper] Sudo will be required.\n' % (MAPPER_NAME));
+
+	command = 'sudo apt-get install libhdf5-dev';
+	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
+	sys.stderr.write('[%s wrapper] Running make.\n' % (MAPPER_NAME));
+	command = 'cd %s; make' % (ALIGNER_PATH);
+	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
 	subprocess.call(command, shell='True');
 	sys.stderr.write('\n');
 

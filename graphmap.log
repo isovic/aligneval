@@ -1,0 +1,6 @@
+[Mon, 26 Jan 15 10:21:02 +0000 FATAL] #2: Could not open file. File path: 'real_nanopore/GraphMap-/home/isovic/work/eclipse-workspace/aligner-comparison/../golden-bundle/alignments_for_testing/reads-simulated/OxfordNanopore-pbsim-observed_last-1d-10k/escherichia_coli/temp.sam.sam'.
+[Mon, 26 Jan 15 10:21:02 +0000 FATAL] Exiting.
+[Mon, 26 Jan 15 10:23:07 +0000 FATAL] #2: Could not open file. File path: '/home/isovic/work/eclipse-workspace/aligner-comparison/../golden-bundle/alignments_for_testing/reads-simulated/OxfordNanopore-pbsim-observed_last-1d-10k/escherichia_coli/temp/GraphMap-/home/isovic/work/eclipse-workspace/aligner-comparison/../golden-bundle/alignments_for_testing/reads-simulated/OxfordNanopore-pbsim-observed_last-1d-10k/escherichia_coli/temp.sam'.
+[Mon, 26 Jan 15 10:23:07 +0000 FATAL] Exiting.
+[Mon, 26 Jan 15 10:25:04 +0000 FATAL] #2: Could not open file. File path: '/home/isovic/work/eclipse-workspace/aligner-comparison/../golden-bundle/alignments_for_testing/reads-simulated/OxfordNanopore-pbsim-observed_last-1d-10k/escherichia_coli//GraphMap-/home/isovic/work/eclipse-workspace/aligner-comparison/../golden-bundle/alignments_for_testing/reads-simulated/OxfordNanopore-pbsim-observed_last-1d-10k/escherichia_coli/.sam'.
+[Mon, 26 Jan 15 10:25:04 +0000 FATAL] Exiting.

@@ -24,9 +24,9 @@ def create_folders():
 		sys.stderr.write('Creating folder "%s".\n' % basicdefines.EVALUATION_PATH_ROOT_ABS);
 		os.makedirs(basicdefines.EVALUATION_PATH_ROOT_ABS);
 
-	if not os.path.exists(basicdefines.TOOLS_PATH_ROOT_ABS):
-		sys.stderr.write('Creating folder "%s".\n' % basicdefines.TOOLS_PATH_ROOT_ABS);
-		os.makedirs(basicdefines.TOOLS_PATH_ROOT_ABS);
+	if not os.path.exists(basicdefines.TOOLS_ROOT_ABS):
+		sys.stderr.write('Creating folder "%s".\n' % basicdefines.TOOLS_ROOT_ABS);
+		os.makedirs(basicdefines.TOOLS_ROOT_ABS);
 
 	if not os.path.exists(basicdefines.ALIGNERS_PATH_ROOT_ABS):
 		sys.stderr.write('Creating folder "%s".\n' % basicdefines.ALIGNERS_PATH_ROOT_ABS);
@@ -50,7 +50,31 @@ def download_aligners():
 		wrapper_basename = os.path.splitext(os.path.basename(wrapper))[0];
 		command = 'import %s; %s.download_and_install()' % (wrapper_basename, wrapper_basename);
 		exec(command);
-		
+
+def setup_tools():
+	sys.stderr.write('Cloning Cgmemtime Git repo. Git needs to be installed.\n');
+	command = 'cd %s; git clone https://github.com/isovic/cgmemtime.git' % (basicdefines.TOOLS_ROOT_ABS);
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
+	sys.stderr.write('Downloading and unpacking the ART next generation sequence simulator.\n');
+	command = 'cd %s; wget http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanillaicecream031114linux64tgz.tgz; tar -xzvf artbinvanillaicecream031114linux64tgz.tgz' % (basicdefines.TOOLS_ROOT_ABS);
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
+	sys.stderr.write('Downloading and unpacking PBsim.\n');
+	command = 'cd %s; wget http://pbsim.googlecode.com/files/pbsim-1.0.3-Linux-amd64.tar.gz; tar -xzvf pbsim-1.0.3-Linux-amd64.tar.gz' % (basicdefines.TOOLS_ROOT_ABS);
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
+	sys.stderr.write('Downloading and unpacking LAST aligner. Its scripts are needed to convert from MAF to SAM.\n');
+	command = 'cd %s; wget http://last.cbrc.jp/last-534.zip; unzip last-534.zip' % (basicdefines.TOOLS_ROOT_ABS);
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
+# tools/last-534/scripts
+
+
 
 
 if __name__ == '__main__':
@@ -66,6 +90,8 @@ if __name__ == '__main__':
 	# unpack_reference_genomes();
 
 	download_aligners();
+
+	# setup_tools();
 
 
 

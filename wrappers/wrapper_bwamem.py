@@ -11,13 +11,10 @@ import multiprocessing;
 
 import basicdefines;
 
-ALIGNER_URL = 'https://github.com/isovic/graphmap.git';
-ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap/bin/Linux-x64/';
-BIN = 'graphmap';
-MAPPER_NAME = 'GraphMap';
-
-# ALIGNER_PATH = SCRIPT_PATH + '/../../../graphmap/bin';
-# BIN = 'graphmap-not_release';
+ALIGNER_URL = 'https://github.com/lh3/bwa.git';
+ALIGNER_PATH = SCRIPT_PATH + '/../aligners/bwa/';
+BIN = 'bwa';
+MAPPER_NAME = 'BWAMEM';
 
 
 
@@ -34,19 +31,19 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	num_threads = multiprocessing.cpu_count();
 
 	if ((machine_name.lower() == 'illumina') or (machine_name.lower() == 'roche')):
-		parameters = '-x illumina -v 5 -b 4 -B 0';
+		parameters = '-t %s' % str(num_threads);
 
 	elif ((machine_name.lower() == 'pacbio')):
-		parameters = '-v 5 -b 4 -B 0';
+		parameters = '-t %s -x pacbio' % str(num_threads);
 
 	elif ((machine_name.lower() == 'nanopore')):
-		parameters = '-x nanopore -v 5 -b 4 -B 0';
+		parameters = '-t %s -x ont2d' % str(num_threads);
 
 	elif ((machine_name.lower() == 'debug')):
-		parameters = '-x nanopore -v 5 -C -B 0 -j 11 -v 7 -y 31676 -n 1 -t 1';
+		parameters = '-t %s' % str(num_threads);
 
 	else:			# default
-		parameters = '-v 5 -b 4 -B 0';
+		parameters = '-t %s' % str(num_threads);
 
 
 
@@ -62,14 +59,14 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	
 	# Run the indexing process, and measure execution time and memory.
 	sys.stderr.write('[%s wrapper] Generating index...\n' % (MAPPER_NAME));
-	command = '%s %s/%s -I -r %s' % (basicdefines.measure_command(memtime_file_index), ALIGNER_PATH, BIN, reference_file);
+	command = '%s %s/%s index %s' % (basicdefines.measure_command(memtime_file_index), ALIGNER_PATH, BIN, reference_file);
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
 	subprocess.call(command, shell=True);
 	sys.stderr.write('\n\n');
 
 	# Run the alignment process, and measure execution time and memory.
 	sys.stderr.write('[%s wrapper] Running %s...\n' % (MAPPER_NAME, MAPPER_NAME));
-	command = '%s %s/%s %s -r %s -d %s -o %s' % (basicdefines.measure_command(memtime_file), ALIGNER_PATH, BIN, parameters, reference_file, reads_file, sam_file);
+	command = '%s %s/%s mem %s %s %s > %s' % (basicdefines.measure_command(memtime_file), ALIGNER_PATH, BIN, parameters, reference_file, reads_file, sam_file);
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
 	subprocess.call(command, shell=True);
 	sys.stderr.write('\n\n');
@@ -86,6 +83,11 @@ def download_and_install():
 	sys.stderr.write('[%s wrapper] Started installation of %s.\n' % (MAPPER_NAME, MAPPER_NAME));
 	sys.stderr.write('[%s wrapper] Cloning git repository.\n' % (MAPPER_NAME));
 	command = 'cd %s; git clone %s' % (basicdefines.ALIGNERS_PATH_ROOT_ABS, ALIGNER_URL);
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
+	sys.stderr.write('[%s wrapper] Running make.\n' % (MAPPER_NAME));
+	command = 'cd %s; make' % (ALIGNER_PATH);
 	subprocess.call(command, shell='True');
 	sys.stderr.write('\n');
 

@@ -105,7 +105,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	fp = open(sam_file, 'w');
 	fp.write(get_sam_header(reference_file));
 	fp.close();
-	command = '%s %s/../scripts/maf-convert.py sam %s >> %s' % (basicdefines.measure_command(memtime_file_maftosam), ALIGNER_PATH, maf_file, sam_file);
+	command = '%s %s/../scripts/maf-convert sam %s >> %s' % (basicdefines.measure_command(memtime_file_maftosam), ALIGNER_PATH, maf_file, sam_file);
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
 	subprocess.call(command, shell=True);
 	sys.stderr.write('\n\n');

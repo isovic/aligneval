@@ -14,6 +14,7 @@ import subprocess;
 # import filesandfolders;
 # from basicdefines import *;
 import basicdefines;
+import generate_data;
 
 
 
@@ -72,26 +73,47 @@ def setup_tools():
 	subprocess.call(command, shell='True');
 	sys.stderr.write('\n');
 
-# tools/last-534/scripts
 
 
-
+def verbose_usage_and_exit():
+	sys.stderr.write('Usage:\n');
+	sys.stderr.write('\t%s [mode]\n' % sys.argv[0]);
+	sys.stderr.write('\n');
+	sys.stderr.write('\tRunning the script with no parameters will run all processes.\n');
+	sys.stderr.write('\tParameter mode specifies which step to execute.\n');
+	sys.stderr.write('\t- mode - "folders", "references", "aligners", "tools", "simdata"\n');
+	sys.stderr.write('\n');
+	exit(0);
 
 if __name__ == '__main__':
-	sys.stderr.write('Running this script will consume large amount of disk space.\n');
-	yes_no = raw_input("Do you want to continue? [y/n] ");
+	if (len(sys.argv) > 2):
+		verbose_usage_and_exit();
 
-	if (yes_no != 'y'):
-		sys.stderr.write('Exiting.\n\n');
-		exit(0);
+	mode = '';
+	if (len(sys.argv) == 2):
+		mode = sys.argv[1];
 
-	create_folders();
+	if (mode == 'references' or mode == 'simdata'):
+		sys.stderr.write('Running this script will consume large amount of disk space.\n');
+		yes_no = raw_input("Do you want to continue? [y/n] ");
+		if (yes_no != 'y'):
+			sys.stderr.write('Exiting.\n\n');
+			exit(0);
 
-	# unpack_reference_genomes();
+	if (mode == '' or mode == 'folders'):
+		create_folders();
 
-	download_aligners();
+	if (mode == '' or mode == 'references'):
+		unpack_reference_genomes();
 
-	# setup_tools();
+	if (mode == '' or mode == 'aligners'):
+		download_aligners();
+
+	if (mode == '' or mode == 'tools'):
+		setup_tools();
+
+	if (mode == '' or mode == 'simdata'):
+		generate_data.GenerateAll();
 
 
 

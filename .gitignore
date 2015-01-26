@@ -25,6 +25,7 @@
 
 reference-genomes/*
 !reference-genomes/*.tar.gz
+reads-simulated/
 evaluation/
 aligners/
 temp/

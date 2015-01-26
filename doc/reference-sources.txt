@@ -1,0 +1,50 @@
+*** neisseria_meningitidis.fasta ***
+N. Meningitidis ~ 2Mbp, 1 chromosome, 0 N-bases, and 0 non [ACTGN] characters (lowercase letters, and similar)
+http://www.ncbi.nlm.nih.gov/nuccore/NC_003116
+Complete DNA sequence of a serogroup A strain of Neisseria meningitidis Z2491
+-------------------------------------------------------------------------------
+*** escherichia_coli.fa ***
+(= 2-NCBI-E.Coli-sequence.fasta) ~ 4.64Mbp, 1 chromosome, 0 N-bases, and 0 non [ACTGN] characters (lowercase letters, and similar)
+Escherichia coli str. K-12 substr. MG1655, complete genome
+http://www.ncbi.nlm.nih.gov/nuccore/48994873?report=fasta
+
+-------------------------------------------------------------------------------
+*** saccharomyces_cerevisiae.fa ***
+S. Cerevisiae ~ 12Mbp, 16 chromosomes, 0 N-bases, and 0 non [ACTGN] characters (lowercase letters, and similar)
+Saccharomyces Cerevisiae S288C
+The S288C strain was used in this sequencing project.
+http://hgdownload.cse.ucsc.edu/goldenPath/sacCer3/chromosomes/
+Category: "YEAST AND OTHERS"
+
+wget --timestamping 'ftp://hgdownload.cse.ucsc.edu/goldenPath/sacCer3/chromosomes/*'
+
+-------------------------------------------------------------------------------
+*** mycosphaerella_graminicola.fa ***
+Mycosphaerella_graminicola ~ 40Mbp, 21 chromosome, 7341 N-bases, and 0 non [ACTGN] characters (lowercase letters, and similar)
+ftp://ftp.ncbi.nih.gov/genbank/genomes/Eukaryotes/fungi/Mycosphaerella_graminicola/MYCGR_v2.0/
+
+-------------------------------------------------------------------------------
+*** caenorhabditis_elegans.fa ***
+C. Elegans ~ 100Mbp
+100272607 (100.27 Mbp), 6 chromosomes, 0 N-bases, and 0 non [ACTGN] characters (lowercase letters, and similar)
+The webpage said that this version was last refreshed on 04/03/2013:
+ftp://ftp.ncbi.nih.gov/genbank/genomes/Eukaryotes/invertebrates/Caenorhabditis_elegans/WBcel235/Primary_Assembly/assembled_chromosomes/FASTA/
+
+-------------------------------------------------------------------------------
+*** hg19_v38-chr3.fa ***
+Human genome hg19, version 38, chromosome 3, ~ 200Mbp
+ftp://ftp.ncbi.nlm.nih.gov/genbank/genomes/Eukaryotes/vertebrates_mammals/Homo_sapiens/GRCh38/Primary_Assembly/assembled_chromosomes/FASTA/
+
+Reason for choosing this particular chromosome:
+Chromosome 3
+Number of sequences = 1
+N25 = 198295559 (198.30 Mbp)
+N50 = 198295559 (198.30 Mbp)
+N75 = 198295559 (198.30 Mbp)
+Min length = 198295559 (198.30 Mbp)
+Max length = 198295559 (198.30 Mbp)
+Sum of lengths = 198295559 (198.30 Mbp)
+Total number of N bases = 195417 (0.20 Mbp)
+Total number of non [ACTGN] bases = 7 (0.00 Mbp)
+
+(The number of (N's + number of non [ACTGN] bases) is one of the smallest for a chromosome of this size)

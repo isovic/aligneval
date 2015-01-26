@@ -1,0 +1,14 @@
+*.fasta
+*.fastq
+*.fa
+*.fq
+*.sam
+*.maf
+
+reference-genomes/*
+!reference-genomes/*.tar.gz
+evaluation/
+aligners/
+temp/
+index/
+tools/

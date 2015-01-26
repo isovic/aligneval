@@ -5,6 +5,7 @@
 *.sam
 *.maf
 *.pyc
+*.log
 
 */*.pyc
 */*.fasta

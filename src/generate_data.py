@@ -325,7 +325,7 @@ def GeneratePacBio(genome_path, genome_filename, fold_coverage=20, length_mean=3
 	for maf_file in maf_files:		
 		# Convert the maf file to SAM format.
 		sam_file = maf_file[0:-3] + 'sam';
-		shell_command = TOOLS_ROOT_ABS + '/last-460/scripts/maf-convert.py sam ' + maf_file + ' > ' + sam_file;
+		shell_command = MAF_CONVERT_ROOT_ABS + '/maf-convert.py sam ' + maf_file + ' > ' + sam_file;
 		print 'Converting MAF to SAM ("%s" -> "%s")' % (maf_file, sam_file);
 		print 'Executing command: "%s"' % shell_command;
 		subprocess.call(shell_command, shell=True);

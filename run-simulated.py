@@ -78,7 +78,7 @@ if __name__ == "__main__":
 			num_processed_datasets += 1;
 			sys.stderr.write('====================================================\n');
 				
-			machine_num += 1;
+		machine_num += 1;
 
 	sys.stderr.write('Done!\n');
 	sys.stderr.write('\n');

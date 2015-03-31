@@ -692,7 +692,7 @@ def GenerateAll():
 
 	GenerateNGSData(num_reads_to_generate);
 	GeneratePacBioData(num_reads_to_generate);
-	# GenerateOxfordNanoporeData(num_reads_to_generate);
+	GenerateOxfordNanoporeData(num_reads_to_generate);
 
 
 

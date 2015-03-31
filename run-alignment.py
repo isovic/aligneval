@@ -32,6 +32,7 @@ if __name__ == "__main__":
 	simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-2d-1k');		machine_names.append('real_nanopore');
 	simulated_datasets.append('OxfordNanopore-pbsim-observed_last-1d-1k');			machine_names.append('real_nanopore');
 	simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-1d-1k');		machine_names.append('real_nanopore');
+	simulated_datasets.append('OxfordNanopore-pbsim-observed_marginalign-2d-1k');		machine_names.append('real_nanopore');
 
 	genomes = [];
 	genomes.append('neisseria_meningitidis');

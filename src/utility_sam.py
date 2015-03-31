@@ -123,11 +123,6 @@ class SAMLine:
 
 		self.optional_graphmap = {};
 		if ('X3' in self.optional):
-			# GraphMap specific parameter.
-# 			# X3:Z:lcs_length=664_cov_bases=469_num_kmers=176_local_scores_id_1_act_q[26,1148]_act_r[399795850,399797281]_act_d[1122,1431]_p[_0.784067]_supp[0.215933]_std[51.9762]_AS[0.0441]_AS_std[0.8615]_AS_cov_bases[0.7560]_AS_read_len[0.0712]_AS_query_len[0.9517]
-# NM:i:552        AS:i:197        H0:i:1  Z1:f:0.000984835        X1:i:40 X2:i:1179       X3:Z:lcs_length=54
-# 0_cov_bases=462_num_kmers=176_local_scores_id_0_act_q[26,1148]_act_r[399795850,399797281]_act_d[1122,1431]_p[_0.784067]_supp[0.215933]_std[52.4524]_AS[0.0434]_AS_std[0.8602]_AS_cov_bases[0.7447]_AS_read_len[0.0712]_AS_query_len[0.9517]__
-# region_votes=28__max_region_votes=28__num_region_iterations=0__num_eq_ops=749__num_x_ops=238__num_i_ops=192__num_d_ops=122__match_rate=0.64__mismatch_rate=0.42			
 
 			params = self.optional['X3'];
 			# print params;
@@ -147,22 +142,6 @@ class SAMLine:
 			m = re.search(r'_num_x_ops=(.*?)_', params);	self.optional_graphmap['num_x_ops'] = float(m.group(1)) if (m and m.groups) else 0.0;
 			m = re.search(r'_num_i_ops=(.*?)_', params);	self.optional_graphmap['num_i_ops'] = float(m.group(1)) if (m and m.groups) else 0.0;
 			m = re.search(r'_num_d_ops=(.*?)_', params);	self.optional_graphmap['num_d_ops'] = float(m.group(1)) if (m and m.groups) else 0.0;
-
-			# m = re.search(r'_AS\[(.*?)\]', params);
-			# if (m.groups):
-			# 	self.optional_graphmap['AS'] = float(m.group(1));
-			# m = re.search(r'_AS_std\[(.*?)\]', params);
-			# if (m.groups):
-			# 	self.optional_graphmap['AS_std'] = float(m.group(1));
-			# m = re.search(r'_AS_cov_bases\[(.*?)\]', params);
-			# if (m.groups):
-			# 	self.optional_graphmap['AS_cov_bases'] = float(m.group(1));
-			# m = re.search(r'_AS_read_len\[(.*?)\]', params);
-			# if (m.groups):
-			# 	self.optional_graphmap['AS_read_len'] = float(m.group(1));
-			# m = re.search(r'_AS_query_len\[(.*?)\]', params);
-			# if (m.groups):
-			# 	self.optional_graphmap['AS_query_len'] = float(m.group(1));
 
 		self.chosen_quality = self.mapq + 0;
 		# if (self.chosen_quality == 255):

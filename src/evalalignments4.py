@@ -11,8 +11,8 @@ import math;
 import time;
 import numpy as np;
 
-import loadacc;
-from loadacc import AccuracyInfo;
+# import loadacc;
+# from loadacc import AccuracyInfo;
 from basicdefines import *;
 
 # import main_sam_analysis;
@@ -513,12 +513,12 @@ def GetROCFromEvaluatedSAM(sam_file, sam_lines, hashed_reference, allowed_distan
 		i += 1;
 	
 	fn = total_tp - tp + total_not_mapped;
-	precision = tp / (tp + fp);
-	recall = tp / (tp + fn);
+	precision = tp / (tp + fp) if ((tp + fp != 0)) else 0.0;
+	recall = tp / (tp + fn) if ((tp + fn) != 0) else 0.0;
 	precision_list.append(precision);
 	recall_list.append(recall);
-	tpr_list.append(float(tp) / float(current_num_alignments));
-	fpr_list.append(float(fp) / float(current_num_alignments));
+	tpr_list.append(float(tp) / float(current_num_alignments) if (current_num_alignments != 0) else 0.0);
+	fpr_list.append(float(fp) / float(current_num_alignments) if (current_num_alignments != 0) else 0.0);
 
 	roc = [fpr_list, tpr_list];
 	precrec = [recall_list, precision_list];
@@ -624,12 +624,12 @@ def CalculateStats(num_unique_references, sam_lines, sam_basename, sam_execution
 	total_mapped = true_positive + false_positive;
 	total_not_mapped = not_mapped + num_unique_references - total_mapped;
 	summary_line = '';
-	summary_line += 'true_positive / num_unique_references = %d (%.2f%%)\n' % (true_positive, (float(true_positive) / float(num_unique_references))*100.0);
-	summary_line += 'false_positive / num_unique_references = %d (%.2f%%)\n' % (false_positive, (float(false_positive) / float(num_unique_references))*100.0);
-	summary_line += 'true_positive / total_uniquely_mapped = %d (%.2f%%)\n' % (true_positive, (float(true_positive) / float(total_mapped))*100.0);
-	summary_line += 'false_positive / total_uniquely_mapped = %d (%.2f%%)\n' % (false_positive, (float(false_positive) / float(total_mapped))*100.0);
-	summary_line += 'total_mapped = %d (%.2f%%)\n' % (total_mapped, (float(total_mapped) / float(num_unique_references))*100.0);
-	summary_line += 'not_mapped = %d (%.2f%%)\n' % (total_not_mapped, (float(total_not_mapped) / float(num_unique_references))*100.0);
+	summary_line += 'true_positive / num_unique_references = %d (%.2f%%)\n' % (true_positive, (0.0 if (num_unique_references == 0) else ((float(true_positive) / float(num_unique_references))*100.0)) );
+	summary_line += 'false_positive / num_unique_references = %d (%.2f%%)\n' % (false_positive, (0.0 if (num_unique_references == 0) else ((float(false_positive) / float(num_unique_references))*100.0)) );
+	summary_line += 'true_positive / total_uniquely_mapped = %d (%.2f%%)\n' % (true_positive, (0.0 if (total_mapped == 0) else ((float(true_positive) / float(total_mapped))*100.0)) );
+	summary_line += 'false_positive / total_uniquely_mapped = %d (%.2f%%)\n' % (false_positive, (0.0 if (total_mapped == 0) else ((float(false_positive) / float(total_mapped))*100.0)) );
+	summary_line += 'total_mapped = %d (%.2f%%)\n' % (total_mapped, (0.0 if (num_unique_references == 0) else (float(total_mapped) / float(num_unique_references))*100.0) );
+	summary_line += 'not_mapped = %d (%.2f%%)\n' % (total_not_mapped, (0.0 if (num_unique_references == 0) else (float(total_not_mapped) / float(num_unique_references))*100.0) );
 	summary_line += 'num_alignments_in_sam = %d\n' % (len(sam_lines));
 	summary_line += 'num_mapped_alignments_in_sam = %d\n' % (len(sam_lines) - num_unmapped_alignments);
 	summary_line += 'num_unmapped_alignments_in_sam = %d\n' % (num_unmapped_alignments);
@@ -643,7 +643,8 @@ def CalculateStats(num_unique_references, sam_lines, sam_basename, sam_execution
 	
 	# Correctness is the percentage of correctly mapped alignments to within the given distance. The percentage is with respect to only the number of mapped alignments.
 #	distance_correctness_y = [((float(value) / float((len(sam_lines) - num_unmapped_alignments)))*100.0) for value in distance_histogram_y];	# This is from v3 of this script.
-	distance_correctness_y = [((float(value) / float(len(unique_lines) - num_unmapped_reads))*100.0) for value in distance_histogram_y];		# This is new, from v4 of the script.
+	# distance_correctness_y = [((float(value) / float(len(unique_lines) - num_unmapped_reads))*100.0) for value in distance_histogram_y];		# This is new, from v4 of the script.
+	distance_correctness_y = [((float(value) / float(len(unique_lines) - num_unmapped_reads))*100.0) if (len(unique_lines) - num_unmapped_reads) else 0.0 for value in distance_histogram_y];		# This is new, from v4 of the script.
 	distance_correctness = [distance_histogram_x, distance_correctness_y];
 
 	# Correctness with unmapped is the percentage of correctly mapped alignments with respect to the total number of reported alignments (including those marked not mapped). These include all reported alignments + number of reads that were not reported in the SAM file.

@@ -4,10 +4,7 @@
 # Copyright Ivan Sovic, 2014. All rights reserved.
 #               www.sovic.org
 #
-# Tool for conversion of FASTQ files to FASTA files.
-# Usage:
-#	./fastq2fasta.py <INPUT_FASTQ_FILE> <OUTPUT_FASTA_FILE>
-#
+# Module for parsing FASTA/FASTQ files.
 
 import sys;
 import numpy as np;
@@ -19,13 +16,25 @@ def peek(fp, num_chars):
 	fp.seek(num_chars * -1, 1);
 	return data;
 
+# Returns a single read from the given FASTA/FASTQ file.
+# Parameter header contains only the header of the read.
+# Parameter lines contains all lines of the read, which include:
+# - header
+# - seq
+# - '+' if FASTQ
+# - quals if FASTQ
+# Parameter lines is an array of strings, each for one component.
+# Please note that multiline FASTA/FASTQ entries (e.g. sequence line)
+# will be truncated into one single line.
 def get_single_read(fp):
 	lines = [];
 	
 	line = fp.readline();
 	header = line.rstrip();
+	header_leading_char = '';
 	if (len(header) > 0):
 		sequence_separator = header[0];
+		header_leading_char = header[0];
 		header = header[1:];			# Strip the '>' or '@' sign from the beginning.
 	else:
 		return ['', []];
@@ -33,7 +42,7 @@ def get_single_read(fp):
 	next_char = peek(fp, 1);
 	
 	line_string = '';
-	lines.append(header);
+	lines.append(header_leading_char + header);
 	
 	num_lines = 1;
 	#while len(next_char) > 0 and next_char != sequence_separator or (next_char == '@' and num_lines < 4):

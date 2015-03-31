@@ -28,7 +28,7 @@ MAPPER_NAME = 'BLASR';
 #	output_suffix		A custom suffix that can be added to the output filename.
 def run(reads_file, reference_file, machine_name, output_path, output_suffix=''):
 	parameters = '';
-	num_threads = multiprocessing.cpu_count();
+	num_threads = multiprocessing.cpu_count() / 2;
 
 	if ((machine_name.lower() == 'illumina') or (machine_name.lower() == 'roche')):
 		parameters = '-nproc %s -sam -bestn 1 -minMatch 7' % str(num_threads);
@@ -58,11 +58,15 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	memtime_file_index = '%s/%s-index.memtime' % (output_path, output_filename);
 	
 	# Run the indexing process, and measure execution time and memory.
-	sys.stderr.write('[%s wrapper] Generating index...\n' % (MAPPER_NAME));
-	command = '%s %s/alignment/bin/sawriter %s.blasrsa %s' % (basicdefines.measure_command(memtime_file_index), ALIGNER_PATH, reference_file, reference_file);
-	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
-	subprocess.call(command, shell=True);
-	sys.stderr.write('\n\n');
+	if not os.path.exists(reference_file + '.blasrsa'):
+		sys.stderr.write('[%s wrapper] Generating index...\n' % (MAPPER_NAME));
+		command = '%s %s/alignment/bin/sawriter %s.blasrsa %s' % (basicdefines.measure_command(memtime_file_index), ALIGNER_PATH, reference_file, reference_file);
+		sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
+		subprocess.call(command, shell=True);
+		sys.stderr.write('\n\n');
+	else:
+		sys.stderr.write('[%s wrapper] Reference index already exists. Continuing.\n' % (MAPPER_NAME));
+		sys.stderr.flush();
 
 	# Run the alignment process, and measure execution time and memory.
 	sys.stderr.write('[%s wrapper] Running %s...\n' % (MAPPER_NAME, MAPPER_NAME));
@@ -111,7 +115,9 @@ def verbose_usage_and_exit():
 	sys.stderr.write('Usage:\n');
 	sys.stderr.write('\t%s mode [<reads_file> <reference_file> <machine_name> <output_path> [<output_suffix>]]\n' % sys.argv[0]);
 	sys.stderr.write('\n');
-	sys.stderr.write('\t- mode - either "run" or "install". Is "install" other parameters can be ommitted.\n');
+	sys.stderr.write('\t- mode          - either "run" or "install". If "install" other parameters can be ommitted.\n');
+	sys.stderr.write('\t- machine_name  - "illumina", "roche", "pacbio", "nanopore" or "default".\n');
+	sys.stderr.write('\t- output_suffix - suffix for the output filename.\n');
 
 	exit(0);
 

@@ -44,7 +44,7 @@ def get_sam_header(reference_file):
 #	output_suffix		A custom suffix that can be added to the output filename.
 def run(reads_file, reference_file, machine_name, output_path, output_suffix=''):
 	parameters = '';
-	num_threads = multiprocessing.cpu_count();
+	num_threads = multiprocessing.cpu_count() / 2;
 
 	if ((machine_name.lower() == 'illumina') or (machine_name.lower() == 'roche')):
 		parameters = '-v ';
@@ -87,11 +87,15 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 		sys.stderr.write('\n');
 
 	# Run the indexing process, and measure execution time and memory.
-	sys.stderr.write('[%s wrapper] Generating index...\n' % (MAPPER_NAME));
-	command = '%s %s/lastdb %s %s' % (basicdefines.measure_command(memtime_file_index), ALIGNER_PATH, reference_db_file, reference_file);
-	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
-	subprocess.call(command, shell=True);
-	sys.stderr.write('\n\n');
+	if not os.path.exists(reference_db_file + '.suf'):
+		sys.stderr.write('[%s wrapper] Generating index...\n' % (MAPPER_NAME));
+		command = '%s %s/lastdb %s %s' % (basicdefines.measure_command(memtime_file_index), ALIGNER_PATH, reference_db_file, reference_file);
+		sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
+		subprocess.call(command, shell=True);
+		sys.stderr.write('\n\n');
+	else:
+		sys.stderr.write('[%s wrapper] Reference DB already exists. Continuing.\n' % (MAPPER_NAME));
+		sys.stderr.flush();
 
 	# Run the alignment process, and measure execution time and memory.
 	sys.stderr.write('[%s wrapper] Running %s...\n' % (MAPPER_NAME, MAPPER_NAME));
@@ -136,7 +140,9 @@ def verbose_usage_and_exit():
 	sys.stderr.write('Usage:\n');
 	sys.stderr.write('\t%s mode [<reads_file> <reference_file> <machine_name> <output_path> [<output_suffix>]]\n' % sys.argv[0]);
 	sys.stderr.write('\n');
-	sys.stderr.write('\t- mode - either "run" or "install". Is "install" other parameters can be ommitted.\n');
+	sys.stderr.write('\t- mode          - either "run" or "install". If "install" other parameters can be ommitted.\n');
+	sys.stderr.write('\t- machine_name  - "illumina", "roche", "pacbio", "nanopore" or "default".\n');
+	sys.stderr.write('\t- output_suffix - suffix for the output filename.\n');
 
 	exit(0);
 

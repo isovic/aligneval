@@ -1,5 +1,9 @@
 #! /usr/bin/python
 
+# Copyright Ivan Sovic, 2015. www.sovic.org
+#
+# Module for parsing and processing of SAM files.
+
 import os;
 import re;
 import sys;
@@ -32,7 +36,12 @@ class SAMLine:
 		self.qual = '';
 		self.optional = {};
 		self.original_line = '';
-		
+		self.evalue = -1.0;
+		self.alignment_score = -1;
+		self.edit_distance = -1;
+		self.fp_filter = -1.0;
+		self.optional_graphmap = {};
+
 		# (II) These parameters are parsed from the parameters parsed from the SAM file.
 		self.clipped_pos = 0;			# If the read has clipping operation at the beginning, then self.clipped_pos = self.pos - num_clipped_bases . This is to allow easy comparison to the reference.
 		self.clip_op_front = '';
@@ -94,6 +103,7 @@ class SAMLine:
 		self.seq = split_line[9];
 		self.qual = split_line[10];
 		
+		### Process optional parameters.
 		self.optional = {};
 		i = 11;
 		while i < len(split_line):
@@ -104,13 +114,74 @@ class SAMLine:
 			self.optional[split_optional[0].strip()] = split_optional[-1].strip();		# Example of an optional parameter: AS:i:717 .
 			i += 1;
 		
+
+		self.alignment_score = -1 if (('AS' in self.optional) == False) else int(self.optional['AS'])
+		self.edit_distance = -1 if (('NM' in self.optional) == False) else int(self.optional['NM'])
+		self.fp_filter = -1.0 if (('X5' in self.optional) == False) else float(self.optional['X5'])
+		if (self.fp_filter == -1.0):
+			self.fp_filter = -1.0 if (('ZF' in self.optional) == False) else float(self.optional['ZF'])
+
+		self.optional_graphmap = {};
+		if ('X3' in self.optional):
+			# GraphMap specific parameter.
+# 			# X3:Z:lcs_length=664_cov_bases=469_num_kmers=176_local_scores_id_1_act_q[26,1148]_act_r[399795850,399797281]_act_d[1122,1431]_p[_0.784067]_supp[0.215933]_std[51.9762]_AS[0.0441]_AS_std[0.8615]_AS_cov_bases[0.7560]_AS_read_len[0.0712]_AS_query_len[0.9517]
+# NM:i:552        AS:i:197        H0:i:1  Z1:f:0.000984835        X1:i:40 X2:i:1179       X3:Z:lcs_length=54
+# 0_cov_bases=462_num_kmers=176_local_scores_id_0_act_q[26,1148]_act_r[399795850,399797281]_act_d[1122,1431]_p[_0.784067]_supp[0.215933]_std[52.4524]_AS[0.0434]_AS_std[0.8602]_AS_cov_bases[0.7447]_AS_read_len[0.0712]_AS_query_len[0.9517]__
+# region_votes=28__max_region_votes=28__num_region_iterations=0__num_eq_ops=749__num_x_ops=238__num_i_ops=192__num_d_ops=122__match_rate=0.64__mismatch_rate=0.42			
+
+			params = self.optional['X3'];
+			# print params;
+			# print '';
+			m = re.search(r'_supp\[(.*?)\]', params);			self.optional_graphmap['supp'] = float(m.group(1)) if (m and m.groups) else 1.0;
+			m = re.search(r'_AS\[(.*?)\]', params);				self.optional_graphmap['AS'] = float(m.group(1)) if (m and m.groups) else 1.0;
+			m = re.search(r'_AS_std\[(.*?)\]', params);			self.optional_graphmap['AS_std'] = float(m.group(1)) if (m and m.groups) else 1.0;
+			m = re.search(r'_AS_cov_bases\[(.*?)\]', params);	self.optional_graphmap['AS_cov_bases'] = float(m.group(1)) if (m and m.groups) else 1.0;
+			m = re.search(r'_AS_read_len\[(.*?)\]', params);	self.optional_graphmap['AS_read_len'] = float(m.group(1)) if (m and m.groups) else 1.0;
+			m = re.search(r'_AS_query_len\[(.*?)\]', params);	self.optional_graphmap['AS_query_len'] = float(m.group(1)) if (m and m.groups) else 1.0;
+			m = re.search(r'_num_kmers=(.*?)_', params);	self.optional_graphmap['num_kmers'] = float(m.group(1)) if (m and m.groups) else 1.0;
+			m = re.search(r'_cov_bases=(.*?)_', params);	self.optional_graphmap['cov_bases'] = float(m.group(1)) if (m and m.groups) else 1.0;
+			m = re.search(r'lcs_length=(.*?)_', params);	self.optional_graphmap['lcs_length'] = float(m.group(1)) if (m and m.groups) else 1.0;
+			m = re.search(r'_match_rate=(.*?)_', params);	self.optional_graphmap['match_rate'] = float(m.group(1)) if (m and m.groups) else 1.0;
+			m = re.search(r'_mismatch_rate=(.*?)\t', params);	self.optional_graphmap['mismatch_rate'] = float(m.group(1)) if (m and m.groups) else 0.0;
+			m = re.search(r'_num_eq_ops=(.*?)_', params);	self.optional_graphmap['num_eq_ops'] = float(m.group(1)) if (m and m.groups) else 0.0;
+			m = re.search(r'_num_x_ops=(.*?)_', params);	self.optional_graphmap['num_x_ops'] = float(m.group(1)) if (m and m.groups) else 0.0;
+			m = re.search(r'_num_i_ops=(.*?)_', params);	self.optional_graphmap['num_i_ops'] = float(m.group(1)) if (m and m.groups) else 0.0;
+			m = re.search(r'_num_d_ops=(.*?)_', params);	self.optional_graphmap['num_d_ops'] = float(m.group(1)) if (m and m.groups) else 0.0;
+
+			# m = re.search(r'_AS\[(.*?)\]', params);
+			# if (m.groups):
+			# 	self.optional_graphmap['AS'] = float(m.group(1));
+			# m = re.search(r'_AS_std\[(.*?)\]', params);
+			# if (m.groups):
+			# 	self.optional_graphmap['AS_std'] = float(m.group(1));
+			# m = re.search(r'_AS_cov_bases\[(.*?)\]', params);
+			# if (m.groups):
+			# 	self.optional_graphmap['AS_cov_bases'] = float(m.group(1));
+			# m = re.search(r'_AS_read_len\[(.*?)\]', params);
+			# if (m.groups):
+			# 	self.optional_graphmap['AS_read_len'] = float(m.group(1));
+			# m = re.search(r'_AS_query_len\[(.*?)\]', params);
+			# if (m.groups):
+			# 	self.optional_graphmap['AS_query_len'] = float(m.group(1));
+
 		self.chosen_quality = self.mapq + 0;
-		if (self.chosen_quality == 255):
+		# if (self.chosen_quality == 255):
+		if (self.alignment_score != -1):
+			self.chosen_quality = self.alignment_score;
+
+		self.evalue = -1.0;
+		if ('Z1' in self.optional):
 			try:
-				self.chosen_quality = int(self.optional['AS']);
+				self.evalue = float(self.optional['Z1'].split('x')[0]);
 			except:
-				pass;
+				self.evalue = 5000000000.0;
+		elif ('ZE' in self.optional):
+			try:
+				self.evalue = float(self.optional['ZE'].split('x')[0]);
+			except:
+				self.evalue = 5000000000.0;
 		
+		### Initialize evaluation values.
 		self.evaluated = 0;
 		self.is_correct_ref_and_orient = 0;
 		self.is_duplicate = 0;
@@ -200,8 +271,14 @@ class SAMLine:
 		#line += 'duplicate = %s\t' % (str(self.is_duplicate != 0));
 		line += 'cigar_start = %s\t' % (self.cigar[0:5]);
 		line += 'cigar_end = %s\t' % (self.cigar[(len(self.cigar)-5):]);
-		line += 'chosen_quality = %d\t' % (self.chosen_quality);
-		line += 'num_occ = %d' % (self.num_occurances_in_sam_file);
+		# line += 'chosen_quality = %d\t' % (self.chosen_quality);
+		line += 'mapq = %d\t' % (self.mapq);
+		line += 'AS = %d\t' % (0 if (('AS' in self.optional) == False) else int(self.optional['AS']));
+		line += 'EValue = %s\t' % self.evalue;
+		line += 'num_occ = %d\t' % (self.num_occurances_in_sam_file);
+		line += 'fp_filter = %s\t' % self.fp_filter;
+		line += 'NM = %d\t' % self.edit_distance;
+		line += 'len = %d' % (len(self.seq) - (self.clip_count_front if (self.clip_op_front == 'S') else 0) - (self.clip_count_back if (self.clip_op_back == 'S') else 0));
 		
 		return line;
 	
@@ -293,6 +370,9 @@ class SAMLine:
 	# length of SEQ. This is used for testing, debugging and sanity checking. If the
 	# SAM line has been properly formatted, the result of this function should be
 	# the same as len(self.seq).
+	# Although this reflects on the seq length, if seq is hard clipped, this does
+	# not report the length of the entire sequence (read) if it were unclipped.
+	# For this purpose, check CalcReadLengthFromCigar function.
 	def CalcAlignmentLengthFromCigar(self):
 		split_cigar = self.SplitCigar();
 		alignment_length = 0;
@@ -307,9 +387,41 @@ class SAMLine:
 			i += 1;
 		return alignment_length;
 
+	# Sums the counts of M/I/S/H/=/X operations in the CIGAR string to determine the
+	# length of the entire read. Unlike CalcAlignmentLengthFromCigar, the value returned
+	# by this function may be greater or equal to the length of seq, because seq can be
+	# hard clipped.
+	def CalcReadLengthFromCigar(self):
+		split_cigar = self.SplitCigar();
+		alignment_length = 0;
+		i = 0;
+		while i < len(split_cigar):
+			cigar_count = split_cigar[i][0];
+			cigar_op = split_cigar[i][1];
+			# From the SAM format specification:
+			#     Sum of lengths of the M/I/S/=/X operations shall equal the length of SEQ.
+			if (cigar_op in 'MISH=X'):
+				alignment_length += cigar_count;
+			i += 1;
+		return alignment_length;
+
 	# Sums the counts of M/D/=/X operations in the CIGAR string to determine the
 	# length of the reference covered by the read.
 	def CalcReferenceLengthFromCigar(self):
+		split_cigar = self.SplitCigar();
+		alignment_length = 0;
+		i = 0;
+		while i < len(split_cigar):
+			cigar_count = split_cigar[i][0];
+			cigar_op = split_cigar[i][1];
+			# From the SAM format specification:
+			#     Sum of lengths of the M/I/S/=/X operations shall equal the length of SEQ.
+			if (cigar_op in 'MD=X'):
+				alignment_length += cigar_count;
+			i += 1;
+		return alignment_length;
+
+	def CountCIGAREvents(self):
 		split_cigar = self.SplitCigar();
 		alignment_length = 0;
 		i = 0;
@@ -357,7 +469,8 @@ class SAMLine:
 		#cigar_list = self.SplitCigar();
 		cigar_list = self.SplitCigarInBasicFormat();
 		cigar_pos_list = [];
-		pos_on_reference = self.clipped_pos + 0;
+		# 08.03.2015. Added the -1 to transform the reference coordinates from 1-based to 0-based.
+		pos_on_reference = self.clipped_pos + 0 - 1;
 		pos_on_read = 0;
 		
 		i = 0;
@@ -442,6 +555,7 @@ class SAMLine:
 			return False;
 
 		return True;
+
 
 	
 
@@ -589,7 +703,7 @@ def HashSAM(sam_path):
 	return [ret, num_references, num_unique_references];
 
 # Hashes the entries from a SAM file by their QNAME for faster lookup during comparison.
-def HashSAMWithFilter(sam_path, qname_hash_to_filter):
+def HashSAMWithFilter(sam_path, qname_hash_to_filter={}):
 	try:
 		fp_reference = open(sam_path, 'r');
 	except IOError:
@@ -615,11 +729,12 @@ def HashSAMWithFilter(sam_path, qname_hash_to_filter):
 		modified_qname = sam_line.qname;
 		#modified_qname = '/'.join(sam_line.qname.split('/')[:-1]);
 		
-		try:
-			if (qname_hash_to_filter[modified_qname] == 1):
-				sam_line.is_filtered_out = True;
-		except:
-				sam_line.is_filtered_out = False;
+		if (qname_hash_to_filter != {}):
+			try:
+				if (qname_hash_to_filter[modified_qname] == 1):
+					sam_line.is_filtered_out = True;
+			except:
+					sam_line.is_filtered_out = False;
 		
 		try:
 			current_hash = ret[modified_qname];

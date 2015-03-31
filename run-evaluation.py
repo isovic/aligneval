@@ -26,12 +26,12 @@ if __name__ == "__main__":
 	machine_names = [];
 	simulated_datasets = [];
 
-	simulated_datasets.append('Illumina-10k-single_end');							machine_names.append('illumina');
-	simulated_datasets.append('PacBio-10k');										machine_names.append('pacbio');
-	simulated_datasets.append('OxfordNanopore-pbsim-observed_last-2d-10k');			machine_names.append('real_nanopore');
-	simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-2d-10k');		machine_names.append('real_nanopore');
-	simulated_datasets.append('OxfordNanopore-pbsim-observed_last-1d-10k');			machine_names.append('real_nanopore');
-	simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-1d-10k');		machine_names.append('real_nanopore');
+	simulated_datasets.append('Illumina-1k-single_end');							machine_names.append('illumina');
+	simulated_datasets.append('PacBio-1k');											machine_names.append('pacbio');
+	simulated_datasets.append('OxfordNanopore-pbsim-observed_last-2d-1k');			machine_names.append('real_nanopore');
+	simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-2d-1k');		machine_names.append('real_nanopore');
+	simulated_datasets.append('OxfordNanopore-pbsim-observed_last-1d-1k');			machine_names.append('real_nanopore');
+	simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-1d-1k');		machine_names.append('real_nanopore');
 	
 	genomes = [];
 	genomes.append('neisseria_meningitidis');
@@ -60,17 +60,6 @@ if __name__ == "__main__":
 			###########################################
 			###########################################
 			machine_suffix = 'v1';
-			for wrapper in aligner_wrappers:
-				wrapper_basename = os.path.splitext(os.path.basename(wrapper))[0];
-				command = '%s.run(reads_fastq, reference_file, machine_names[machine_num], output_path, machine_suffix);' % (wrapper_basename);
-				exec(command);
-
-			# wrapper_graphmap.run(reads_fastq, reference_file, machine_names[machine_num], output_path, machine_suffix);
-			# wrapper_lastal.run(reads_fastq, reference_file, machine_names[machine_num], output_path, machine_suffix);
-			# wrapper_blasr.run(reads_fastq, reference_file, machine_names[machine_num], output_path, machine_suffix);
-			# wrapper_bwamem.run(reads_fastq, reference_file, machine_names[machine_num], output_path, machine_suffix);
-			###########################################
-			###########################################
 
 			evalalignments4.EvaluateAlignmentsFromPath(output_path, machine_suffix);
 

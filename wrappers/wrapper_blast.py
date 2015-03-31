@@ -265,7 +265,8 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 		# These parameters used in the paper: "Oxford Nanopore Sequencing and de novo Assembly of a Eukaryotic Genome", Supplemental Notes and Figures
 		# http://biorxiv.org/content/biorxiv/suppl/2015/01/06/013490.DC1/013490-1.pdf
 		# Quote: "Overall accuracy was calculated by aligning the raw Oxford Nanopore reads to the W303 pacbio assembly using Blast version 2.2.27+ with the following parameters:"
-		parameters += ' -reward 5 -penalty -4 -gapopen 8 -gapextend 6 -dust no -evalue 1e-10';
+		# parameters += ' -reward 5 -penalty -4 -gapopen 8 -gapextend 6 -dust no -evalue 1e-10';
+		parameters += ' -reward 5 -penalty -4 -gapopen 8 -gapextend 6 -dust no';
 
 	elif ((machine_name.lower() == 'debug')):
 		# parameters = '-num_threads %s' % str(num_threads);

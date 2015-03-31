@@ -59,15 +59,16 @@ if __name__ == "__main__":
 			###########################################
 			###########################################
 			machine_suffix = 'v1';
-			for wrapper in aligner_wrappers:
-				wrapper_basename = os.path.splitext(os.path.basename(wrapper))[0];
-				command = '%s.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);' % (wrapper_basename);
-				exec(command);
+			# for wrapper in aligner_wrappers:
+			# 	wrapper_basename = os.path.splitext(os.path.basename(wrapper))[0];
+			# 	command = '%s.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);' % (wrapper_basename);
+			# 	exec(command);
 
+			# wrapper_graphmap.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 			# wrapper_lastal.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 			# wrapper_blasr.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 			# wrapper_bwamem.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
-			# wrapper_blast.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
+			wrapper_blast.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 			###########################################
 			###########################################
 

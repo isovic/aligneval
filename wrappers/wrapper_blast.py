@@ -1,5 +1,29 @@
 #! /usr/bin/python
 
+# The MIT License (MIT)
+
+# Copyright (c) 2015 Ivan Sovic
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
+
 import os
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__));
 
@@ -17,24 +41,12 @@ ALIGNER_PATH = SCRIPT_PATH + '/../aligners/ncbi-blast-2.2.30+/bin/';
 BIN = 'blastn';
 MAPPER_NAME = 'BLAST';
 
+# This specifies the output format of the BLAST alignments, for tabulated output.
 outfmt = 'qseqid qlen qstart qend sseqid slen sstart send sstrand evalue bitscore score length btop qseq sseq';
 
 
 
-# # This function extracts the reference and formats it to SAM format.
-# def get_sam_header(reference_file):
-# 	[headers, seqs, quals] = fastqparser.read_fastq(reference_file);
-	
-# 	line = '';
-	
-# 	i = 0;
-# 	while i < len(headers):
-# 		line += '@SQ\tSN:%s\tLN:%d\n' % (headers[i], len(seqs[i]));
-# 		i += 1;
-	
-# 	return line;
-
-def convert_btop_to_cigar(btop, num_clip_front, num_clip_back, sstrand):
+def convert_btop_to_cigar(btop, num_clip_front, num_clip_back, sstrand, use_extended_cigar=False):
 	cigar_ops = [];
 
 	# Add the front clipping.
@@ -53,7 +65,10 @@ def convert_btop_to_cigar(btop, num_clip_front, num_clip_back, sstrand):
 		elif (is_digit == False):
 			# Handle the match events.
 			if (match_start >= 0 and match_end >= 0):
-				cigar_ops.append([int(btop[match_start:(match_end + 1)]), '=']);
+				if (use_extended_cigar == True):
+					cigar_ops.append([int(btop[match_start:(match_end + 1)]), '=']);
+				else:
+					cigar_ops.append([int(btop[match_start:(match_end + 1)]), 'M']);
 				match_start = -1;	match_end = -1;
 
 			# Mismatch/insertion/deletion operations should be two-character events.
@@ -62,9 +77,13 @@ def convert_btop_to_cigar(btop, num_clip_front, num_clip_back, sstrand):
 				sys.stderr.write('ERROR: BTOP string deformed!\n');
 				exit(1);
 
+			# Handle the mismatches, insertions and deletions.
 			current_error = [];
 			if (btop[i] != '-' and btop[i+1] != '-'):
-				current_error = [1, 'X'];
+				if (use_extended_cigar == True):
+					current_error = [1, 'X'];
+				else:
+					current_error = [1, 'M'];
 			elif (btop[i] == '-' and btop[i+1] != '-'):
 				current_error = [1, 'D'];
 			elif (btop[i] != '-' and btop[i+1] == '-'):
@@ -83,9 +102,15 @@ def convert_btop_to_cigar(btop, num_clip_front, num_clip_back, sstrand):
 
 		i += 1;
 
+	# Append the last CIGAR operation.
 	if (match_start >= 0 and match_end >= 0):
-		cigar_ops.append([int(btop[match_start:(match_end + 1)]), '=']);
-		match_start = -1;	match_end = -1;
+		current_cigar = [int(btop[match_start:(match_end + 1)]), '='] if (use_extended_cigar == True) else [int(btop[match_start:(match_end + 1)]), 'M'];
+
+		if (len(cigar_ops) > 0 and cigar_ops[-1][1] == current_cigar[1]):
+			cigar_ops[-1][0] += current_cigar[0];
+		else:
+			cigar_ops.append(current_cigar);
+
 	# Add the back clipping.
 	if (num_clip_back > 0):
 		cigar_ops.append([num_clip_back, 'S']);
@@ -176,84 +201,23 @@ def convert_blast_to_sam(reference_file, reads_file, blast_out_file, sam_file):
 		sam_cigar = convert_btop_to_cigar(btop, num_clip_front, num_clip_back, sstrand);
 
 		sam_line = '';
-		sam_line += '%s\t' % (qseqid);	# 1. qname
-		sam_line += '%d\t' % (flag);	# 2. flag
-		sam_line += '%s\t' % (sseqid);	# 3. rname
-		sam_line += '%d\t' % (sam_start + 1);		# 4. pos
-		sam_line += '255\t';			# 5. mapq
-		sam_line += '%s\t' % (sam_cigar);	# 6. CIGAR
-		sam_line += '*\t';				# 7. rnext
-		sam_line += '0\t';				# 8. pnext
-		sam_line += '0\t';				# 9. tlen
-		sam_line += '%s\t' % (sam_seq);		# 10. seq
-		sam_line += '%s\t' % (sam_qual);	# 11. qual
-		sam_line += 'AS:i:%s\t' % (score.strip());	# AS, custom
-		sam_line += 'ZE:f:%s\t' % (evalue.strip());	# custom, evalue
-		sam_line += 'ZB:i:%s\t' % (bitscore.strip());	# custom, bitscore
-		sam_line += 'ZA:i:%s' % (length.strip());	# custom, alignment length
+		sam_line += '%s\t' % (qseqid);						# 1. qname
+		sam_line += '%d\t' % (flag);						# 2. flag
+		sam_line += '%s\t' % (sseqid);						# 3. rname
+		sam_line += '%d\t' % (sam_start + 1);				# 4. pos
+		sam_line += '255\t';								# 5. mapq
+		sam_line += '%s\t' % (sam_cigar);					# 6. CIGAR
+		sam_line += '*\t';									# 7. rnext
+		sam_line += '0\t';									# 8. pnext
+		sam_line += '0\t';									# 9. tlen
+		sam_line += '%s\t' % (sam_seq);						# 10. seq
+		sam_line += '%s\t' % (sam_qual);					# 11. qual
+		sam_line += 'AS:i:%s\t' % (score.strip());			# AS, custom
+		sam_line += 'ZE:f:%s\t' % (evalue.strip());			# custom, evalue
+		sam_line += 'ZB:i:%s\t' % (bitscore.strip());		# custom, bitscore
+		sam_line += 'ZA:i:%s' % (length.strip());			# custom, alignment length
 
 		sam_lines.append(sam_line);
-
-		# if (sam_cigar == '150='):
-		# 	print 'Checking a match...';
-		# 	if (sam_seq != ref_seqs[0][sam_start:(sam_end + 1)]):
-		# 		print 'Tu sam 1!';
-		# 		exit(1);
-
-
-
-		# if (sstrand == 'minus'):
-		# if (sam_cigar == '105S14=31S'):
-		# 	print sstrand;
-		# 	print '';
-		# 	print 'qseq in seq: ', (qseq in seq);
-		# 	print 'sseq in ref: ', (sseq in ref_seqs[0]);
-
-		# 	print 'qseq: %s' % qseq;
-		# 	print 'sseq: %s' % sseq;
-		# 	print '';
-		# 	print seq;
-		# 	print '';
-		# 	print 'qry:  ', seq[(int(qstart) - 1) : ((int(qend) + 1) - 1)];
-		# 	print 'qry == qseq: ', (seq[(int(qstart) - 1) : ((int(qend) + 1) - 1)] == qseq);
-		# 	print '';
-		# 	print 'sstart = ', sstart;
-		# 	print 'send = ', send;
-		# 	print 'ref:  ', ref_seqs[0][int(sstart) : (int(send) + 1)];
-		# 	print 'ref:  ', ref_seqs[0][((int(send)) - 1) : (int(sstart) + 1 - 1)];
-		# 	print '';
-		# 	rev_qseq = fastqparser.revcomp_seq(qseq);
-		# 	rev_seq = fastqparser.revcomp_seq(seq);
-		# 	print rev_qseq;
-		# 	print rev_seq;
-		# 	print 'Zero based start position in reverse seq: %d' % rev_seq.find(rev_qseq);
-		# 	print 'qstart: ', qstart;
-		# 	print 'qend: ', qend;
-		# 	print 'qlen: ', qlen;
-
-		# 	print 'num_clip_front = ', num_clip_front;
-		# 	print 'num_clip_back = ', num_clip_back;
-
-		# 	print 'rev_q == ref[start:end]: ', (ref_seqs[0].find(rev_qseq));
-		# 	print 'rev_qseq: ', rev_qseq;
-		# 	print 'ref_seq:  ', ref_seqs[0][sam_start : (sam_end + 1)]
-		# 	print btop;
-		# 	print '';
-		# 	print seq;
-		# 	print ' '*(num_clip_front) + qseq;
-		# 	print sam_seq;
-		# 	print ' '*(num_clip_back) + rev_qseq;
-		# 	print '';
-		# 	print btop;
-		# 	print sam_cigar;
-		# 	print '';
-		# 	print ref_seqs[0][sam_start:(sam_end + 1)];
-
-		# 	# if (qstart != '71'):
-		# 	# if ('-' in btop):
-		# 	exit(1);
-
-
 
 	try:
 		fp = open(sam_file, 'w');
@@ -301,7 +265,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 		# These parameters used in the paper: "Oxford Nanopore Sequencing and de novo Assembly of a Eukaryotic Genome", Supplemental Notes and Figures
 		# http://biorxiv.org/content/biorxiv/suppl/2015/01/06/013490.DC1/013490-1.pdf
 		# Quote: "Overall accuracy was calculated by aligning the raw Oxford Nanopore reads to the W303 pacbio assembly using Blast version 2.2.27+ with the following parameters:"
-		parameters += ' -reward 5 -penalty -4 -gapopen 8 -gapextend 6 -task blastn -dust no -evalue 1e-10';
+		parameters += ' -reward 5 -penalty -4 -gapopen 8 -gapextend 6 -dust no -evalue 1e-10';
 
 	elif ((machine_name.lower() == 'debug')):
 		# parameters = '-num_threads %s' % str(num_threads);
@@ -313,11 +277,11 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 
 
 
-# http://www.kenkraaijeveld.nl/genomics/bioinformatics/
-# The first thing to do is to build your contig.fa file into a Blast database. Type:
-# $ makeblastdb -in [path to contigs.fa] -dbtype nucl -out [path to output directory]
-# You can now query this database with sequences that you want to find. For example:
-# $ blastn -query [path to file with sequence of interest] -task blastn -db [path to your database] -out [path to output directory] -num_threads 8 
+	# http://www.kenkraaijeveld.nl/genomics/bioinformatics/
+	# The first thing to do is to build your contig.fa file into a Blast database. Type:
+	# $ makeblastdb -in [path to contigs.fa] -dbtype nucl -out [path to output directory]
+	# You can now query this database with sequences that you want to find. For example:
+	# $ blastn -query [path to file with sequence of interest] -task blastn -db [path to your database] -out [path to output directory] -num_threads 8 
 
 	if (output_suffix != ''):
 		output_filename = '%s-%s' % (MAPPER_NAME, output_suffix);

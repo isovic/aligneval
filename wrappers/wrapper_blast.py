@@ -151,16 +151,33 @@ def convert_blast_to_sam(reference_file, reads_file, blast_out_file, sam_file):
 
 
 	try:
-		fp = open(blast_out_file, 'r');
+		fp_in = open(blast_out_file, 'r');
 	except Exception, e:
 		sys.stderr.write('ERROR: Could not open file "%s" for reading!\n' % blast_out_file);
 		exit(1);
-	blast_lines = fp.readlines();
-	fp.close();
+	# blast_lines = fp.readlines();
 
-	sam_lines = [];
+	try:
+		fp_out = open(sam_file, 'w');
+	except Exception, e:
+		sys.stderr.write('ERROR: Could not open file "%s" for writing!\n' % sam_file);
+		exit(1);
 
-	for line in blast_lines:
+	# Write the SAM header.
+	i = 0;
+	while i < len(ref_headers):
+		line = '@SQ\tSN:%s\tLN:%d\n' % (ref_headers[i], len(ref_seqs[i]));
+		fp_out.write(line);
+		i += 1;
+
+	# sam_lines = [];
+
+	current_line = 0;
+	for line in fp_in:
+		current_line += 1;
+		if ((current_line % 100) == 0):
+			sys.stderr.write('\rCurrent BLAST output line: %d' % current_line);
+
 		line = line.strip();
 		if (len(line) == 0):
 			continue;
@@ -217,25 +234,13 @@ def convert_blast_to_sam(reference_file, reads_file, blast_out_file, sam_file):
 		sam_line += 'ZB:i:%s\t' % (bitscore.strip());		# custom, bitscore
 		sam_line += 'ZA:i:%s' % (length.strip());			# custom, alignment length
 
-		sam_lines.append(sam_line);
+		# Write the SAM lines.
+		fp_out.write(sam_line + '\n');
 
-	try:
-		fp = open(sam_file, 'w');
-	except Exception, e:
-		sys.stderr.write('ERROR: Could not open file "%s" for writing!\n' % sam_file);
-		exit(1);
+	fp_in.close();
+	fp_out.close();
 
-	# Write the SAM header.
-	i = 0;
-	while i < len(ref_headers):
-		line = '@SQ\tSN:%s\tLN:%d\n' % (ref_headers[i], len(ref_seqs[i]));
-		fp.write(line);
-		i += 1;
-
-	# Write the SAM lines.
-	fp.write('\n'.join(sam_lines));
-
-	fp.close();
+	sys.stderr.write('\n');
 
 
 
@@ -255,18 +260,17 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 		parameters = '-num_threads %s' % str(num_threads);
 
 	elif ((machine_name.lower() == 'pacbio')):
-		# parameters = '-num_threads %s' % str(num_threads);
-		sys.stderr.write('ERROR: PacBio parameters not implemented yet!\n');
-		exit(1);
+		parameters = '-reward 5 -penalty -4 -gapopen 8 -gapextend 6 -dust no';
+		parameters += ' -num_threads %s' % str(num_threads);
 
 	elif ((machine_name.lower() == 'nanopore')):
-		parameters = '-num_threads %s' % str(num_threads);
 		# These parameters used in the paper: ""
 		# These parameters used in the paper: "Oxford Nanopore Sequencing and de novo Assembly of a Eukaryotic Genome", Supplemental Notes and Figures
 		# http://biorxiv.org/content/biorxiv/suppl/2015/01/06/013490.DC1/013490-1.pdf
 		# Quote: "Overall accuracy was calculated by aligning the raw Oxford Nanopore reads to the W303 pacbio assembly using Blast version 2.2.27+ with the following parameters:"
 		# parameters += ' -reward 5 -penalty -4 -gapopen 8 -gapextend 6 -dust no -evalue 1e-10';
-		parameters += ' -reward 5 -penalty -4 -gapopen 8 -gapextend 6 -dust no';
+		parameters = '-reward 5 -penalty -4 -gapopen 8 -gapextend 6 -dust no';
+		parameters += ' -num_threads %s' % str(num_threads);
 
 	elif ((machine_name.lower() == 'debug')):
 		# parameters = '-num_threads %s' % str(num_threads);
@@ -297,7 +301,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	memtime_file_index = '%s/%s-index.memtime' % (output_path, output_filename);
 	
 	# Run the indexing process, and measure execution time and memory.
-	if (not os.path.exists(reference_file + '.nsq')):
+	if (not os.path.exists(out_db_path + '.nsq')):
 		sys.stderr.write('[%s wrapper] Generating index...\n' % (MAPPER_NAME));
 		command = '%s %s/makeblastdb -in %s -dbtype nucl -out %s' % (basicdefines.measure_command(memtime_file_index), ALIGNER_PATH, reference_file, out_db_path);
 		sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
@@ -312,7 +316,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	# command = '%s %s/%s -task blastn -db %s -query %s -out %s %s' % (basicdefines.measure_command(memtime_file), ALIGNER_PATH, BIN, out_db_path, reads_file, out_file, parameters);
 	command = '%s %s/%s -task blastn -db %s -query %s -out %s %s -outfmt "6 %s"' % (basicdefines.measure_command(memtime_file), ALIGNER_PATH, BIN, out_db_path, reads_file, out_file, parameters, outfmt);
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
-	subprocess.call(command, shell=True);
+	# subprocess.call(command, shell=True);
 	sys.stderr.write('\n\n');
 	
 	sys.stderr.write('[%s wrapper] %s wrapper script finished processing.\n' % (MAPPER_NAME, MAPPER_NAME));

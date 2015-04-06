@@ -579,7 +579,7 @@ def CalculateStats(num_unique_references, sam_lines, sam_basename, sam_execution
 #	sorted_lines_by_name = sorted(sam_lines, key=lambda sam_line: (sam_line.qname, (1 - sam_line.is_correct_ref_and_orient), (-sam_line.chosen_quality)));
 	sorted_lines_by_name = sorted(sam_lines, key=lambda sam_line: (sam_line.qname, (-sam_line.chosen_quality)));
 	# OVO SAM BIO ZAKOMENTIRAO U ZADNJOJ VERZIJI!! utility_sam.WriteSamLines(sorted_lines_by_name, ('temp/new_output-%s.txt' % sam_basename));
-	# utility_sam.WriteSamLines(sorted_lines_by_name, ('temp/new_output-%s_%s.txt' % (sam_basename, SCRIPT_VERSION)));
+	utility_sam.WriteSamLines(sorted_lines_by_name, ('temp/new_output-sorted-%s_%s.txt' % (sam_basename, SCRIPT_VERSION)));
 	
 	# Filter unique SAM lines, where uniqueness is defined by the qname parameter.
 	# If there is more than one alignment with the same name, pick only the first one
@@ -618,7 +618,8 @@ def CalculateStats(num_unique_references, sam_lines, sam_basename, sam_execution
 		num_unambiguous_reads += 1;
 		num_unambiguous_mapped_reads += is_read_mapped;
 	
-	#OVO SAM BIO ZAKOMENTIRAO U ZADNJOJ VERZIJI!! utility_sam.WriteSamLines(unique_lines, ('temp/new_output-unique-%s.txt' % sam_basename));
+	#OVO SAM BIO ZAKOMENTIRAO U ZADNJOJ VERZIJI!!
+	utility_sam.WriteSamLines(unique_lines, ('temp/new_output-unique-%s.txt' % sam_basename));
 	
 	[true_positive, false_positive, not_mapped] = utility_sam.GetBasicStats(unique_lines, allowed_distance=52);
 	total_mapped = true_positive + false_positive;

@@ -16,10 +16,6 @@ ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap/bin/Linux-x64/';
 BIN = 'graphmap';
 MAPPER_NAME = 'GraphMap';
 
-# ALIGNER_PATH = SCRIPT_PATH + '/../../../graphmap/bin';
-ALIGNER_PATH = '/home/isovic/work/eclipse-workspace/graphmap/bin';
-BIN = 'graphmap-not_release';
-
 
 
 # Function 'run' should provide a standard interface for running a mapper. Given input parameters, it should run the
@@ -36,15 +32,15 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 
 	if ((machine_name.lower() == 'illumina') or (machine_name.lower() == 'roche')):
 		# parameters = '-x illumina -v 5 -b 4 -B 0';
-		parameters = '-v 5 -t %d -B 0 -b 3 -F 0.05 -l 9 -A 12' % num_threads;
+		parameters = '-v 5 -t %d -B 0 -b 3' % num_threads;
 
 	elif ((machine_name.lower() == 'pacbio')):
 		# parameters = '-v 5 -b 4 -B 0';
-		parameters = '-v 5 -t %d -B 0 -b 3 -F 0.05 -l 9 -A 12' % num_threads;
+		parameters = '-v 5 -t %d -B 0 -b 3' % num_threads;
 
 	elif ((machine_name.lower() == 'nanopore')):
 		# parameters = '-x nanopore -v 5 -b 4 -B 0';
-		parameters = '-v 5 -t %d -B 0 -b 3 -F 0.05 -l 9 -A 12' % num_threads;
+		parameters = '-v 5 -t %d -B 0 -b 3' % num_threads;
 
 	elif ((machine_name.lower() == 'debug')):
 		# parameters = '-x nanopore -v 5 -C -B 0 -j 11 -v 7 -y 31676 -n 1 -t 1';

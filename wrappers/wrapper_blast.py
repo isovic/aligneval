@@ -273,9 +273,9 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 		parameters += ' -num_threads %s' % str(num_threads);
 
 	elif ((machine_name.lower() == 'debug')):
-		# parameters = '-num_threads %s' % str(num_threads);
-		sys.stderr.write('ERROR: Debug parameters not implemented yet!\n');
-		exit(1);
+		parameters = '-num_threads %s' % str(num_threads);
+		# sys.stderr.write('ERROR: Debug parameters not implemented yet!\n');
+		# exit(1);
 
 	else:			# default
 		parameters = '-num_threads %s' % str(num_threads);

@@ -75,25 +75,25 @@ if __name__ == "__main__":
 	machine_names = [];
 	simulated_datasets = [];
 
-	# simulated_datasets.append('Illumina-1k-single_end');								machine_names.append('illumina');
-	# simulated_datasets.append('PacBio-1k');												machine_names.append('pacbio');
-	# simulated_datasets.append('OxfordNanopore-pbsim-observed_last-2d-1k');				machine_names.append('nanopore');
-	# simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-2d-1k');			machine_names.append('nanopore');
+	simulated_datasets.append('Illumina-1k-single_end');								machine_names.append('illumina');
+	simulated_datasets.append('PacBio-1k');												machine_names.append('pacbio');
+	simulated_datasets.append('OxfordNanopore-pbsim-observed_last-2d-1k');				machine_names.append('nanopore');
+	simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-2d-1k');			machine_names.append('nanopore');
 	simulated_datasets.append('OxfordNanopore-pbsim-observed_last-1d-1k');				machine_names.append('nanopore');
-	# simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-1d-1k');			machine_names.append('nanopore');
-	# simulated_datasets.append('OxfordNanopore-pbsim-observed_marginalign-2d-1k');		machine_names.append('nanopore');
+	simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-1d-1k');			machine_names.append('nanopore');
+	simulated_datasets.append('OxfordNanopore-pbsim-observed_marginalign-2d-1k');		machine_names.append('nanopore');
 
 	genomes = [];
-	# genomes.append('neisseria_meningitidis');
-	# genomes.append('escherichia_coli');
+	genomes.append('neisseria_meningitidis');
+	genomes.append('escherichia_coli');
 	genomes.append('saccharomyces_cerevisiae');
-	# genomes.append('caenorhabditis_elegans');
-	# genomes.append('hg19_v38-chr3');
+	genomes.append('caenorhabditis_elegans');
+	genomes.append('hg19_v38-chr3');
 
 	num_processed_datasets = 0;
 	num_datasets = len(simulated_datasets) * len(genomes);
 
-	bp_dist = 30;
+	bp_dist = 50;
 
 	results_bp_dataset_header = ['Dataset'];	results_bp_genome_header = ['Genome'];	results_bp_table = {};
 	results_cb_dataset_header = ['Dataset'];	results_cb_genome_header = ['Genome'];	results_cb_table = {};
@@ -121,7 +121,7 @@ if __name__ == "__main__":
 			print '';
 
 			### Use this to select only requeired mappers for reporting the results:
-			# eval_scores = filter_only_select_mappers(['GraphMap'], eval_scores);
+			eval_scores = filter_only_select_mappers(['GraphMap'], eval_scores);
 
 			# Precision and recall for mapping position, allowed within +-bp distance from expected location.
 			register_scores(simulated_dataset, reference_name, eval_scores, 0, 1, results_bp_dataset_header, results_bp_genome_header, results_bp_table);

@@ -116,12 +116,13 @@ if __name__ == "__main__":
 			###########################################
 			machine_suffix = 'v1';
 
-			eval_scores = evalalignments4.EvaluateAlignmentsFromPath(output_path, machine_suffix, bp_dist=bp_dist);
+			# eval_scores = evalalignments4.EvaluateAlignmentsFromPath(output_path, machine_suffix, bp_dist=bp_dist);
+			eval_scores = evalalignments4.EvaluateAlignmentsFromPath(output_path, 'GraphMap-v1', bp_dist=bp_dist);
 			print eval_scores;
 			print '';
 
 			### Use this to select only requeired mappers for reporting the results:
-			eval_scores = filter_only_select_mappers(['GraphMap'], eval_scores);
+			# eval_scores = filter_only_select_mappers(['GraphMap'], eval_scores);
 
 			# Precision and recall for mapping position, allowed within +-bp distance from expected location.
 			register_scores(simulated_dataset, reference_name, eval_scores, 0, 1, results_bp_dataset_header, results_bp_genome_header, results_bp_table);

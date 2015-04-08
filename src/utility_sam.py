@@ -65,6 +65,8 @@ class SAMLine:
 		self.actual_ref_pos = 0;
 		self.mapped_pos_with_shift = 0;
 		self.min_distance = -1;
+
+		self.num_correct_m_ops = 0;
 		
 		self.sam_basename = '';
 
@@ -181,6 +183,8 @@ class SAMLine:
 		self.clip_op_back = '';
 		self.clip_count_back = 0;
 		self.num_occurances_in_sam_file = 1;
+
+		self.num_correct_m_ops = 0;
 		
 		self.sam_basename = sam_basename;
 		
@@ -257,7 +261,8 @@ class SAMLine:
 		line += 'num_occ = %d\t' % (self.num_occurances_in_sam_file);
 		line += 'fp_filter = %s\t' % self.fp_filter;
 		line += 'NM = %d\t' % self.edit_distance;
-		line += 'len = %d' % (len(self.seq) - (self.clip_count_front if (self.clip_op_front == 'S') else 0) - (self.clip_count_back if (self.clip_op_back == 'S') else 0));
+		line += 'len = %d\t' % (len(self.seq) - (self.clip_count_front if (self.clip_op_front == 'S') else 0) - (self.clip_count_back if (self.clip_op_back == 'S') else 0));
+		line += 'correct_M = %d' % (self.num_correct_m_ops);
 		
 		return line;
 	
@@ -599,6 +604,39 @@ def LoadOnlySAMHeaders(sam_path, verbose=False):
 		sys.stdout.write('done!\n');
 	
 	return headers;
+
+def HashSAMLines(sam_lines):
+	ret = {};
+	num_unique_lines = 0;
+	num_lines = 0;
+	for sam_line in sam_lines:
+		qname = sam_line.qname;
+		if (qname in ret):
+				current_hash = ret[qname];
+
+				should_be_counted = True;
+				# We have to check if this sequence is actually a paired read of another sequence, or there is something funny in the data.
+				for existing_sam in current_hash:
+					if (sam_line.IsSecondary() == True) or (sam_line.IsSecondary() == existing_sam.IsSecondary() and sam_line.IsReverse() == existing_sam.IsReverse()):
+						# This case should not be counted. It means that, either the alignment is marked as secondary which means there should be a primary alignment as well, or that there is more than one primary alignment, and the orientation is the same, which means that an aligner is trying to artificially boost-up their statistics.
+						should_be_counted = False;
+						break;
+				if should_be_counted == True:
+					num_unique_lines += 1;	# Count only unique sequences.
+		else:
+			# This is a new sequence, not hashed before. Create a new list and count the sequence.
+			ret[qname] = [sam_line];
+			if sam_line.IsSecondary() == False:
+				num_unique_lines += 1;	# Count only unique sequences, but not secondary ones.
+
+		num_lines += 1;	# Count only unique sequences.
+
+	for key in ret.keys():
+		ret[key].sort(reverse=True, key=lambda sam_line: sam_line.chosen_quality);
+
+	return [ret, num_lines, num_unique_lines];
+
+
 
 # Hashes the entries from a SAM file by their QNAME for faster lookup during comparison.
 def HashSAM(sam_path):

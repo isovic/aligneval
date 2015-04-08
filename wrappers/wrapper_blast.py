@@ -316,7 +316,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	# command = '%s %s/%s -task blastn -db %s -query %s -out %s %s' % (basicdefines.measure_command(memtime_file), ALIGNER_PATH, BIN, out_db_path, reads_file, out_file, parameters);
 	command = '%s %s/%s -task blastn -db %s -query %s -out %s %s -outfmt "6 %s"' % (basicdefines.measure_command(memtime_file), ALIGNER_PATH, BIN, out_db_path, reads_file, out_file, parameters, outfmt);
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
-	# subprocess.call(command, shell=True);
+	subprocess.call(command, shell=True);
 	sys.stderr.write('\n\n');
 	
 	sys.stderr.write('[%s wrapper] %s wrapper script finished processing.\n' % (MAPPER_NAME, MAPPER_NAME));

@@ -17,7 +17,7 @@ from basicdefines import *;
 
 # import main_sam_analysis;
 import plot_with_seabourne_v2;
-# import analyze_correctly_mapped_bases;
+import analyze_correctly_mapped_bases;
 
 
 
@@ -33,13 +33,13 @@ import utility_sam;
 
 
 
-def EvaluateAlignmentsFromPath(alignments_path, sam_suffix=''):
+def EvaluateAlignmentsFromPath(alignments_path, sam_suffix='', bp_dist=10):
 	dataset_name = alignments_path;
 	current_folder_depth = len(alignments_path.split('/'));
 	sam_files = find_files(alignments_path, '*%s.sam' % sam_suffix, (current_folder_depth));
 
 	if len(sam_files) == 0:
-		return;
+		return None;
 
 	split_out_path = alignments_path.split(EVALUATION_PATH_ROOT_ABS + '/');
 	base_name = split_out_path[1];
@@ -47,9 +47,9 @@ def EvaluateAlignmentsFromPath(alignments_path, sam_suffix=''):
 	# out_scores_folder = SCRIPT_PATH + '/../' + RESULTS_ROOT + '/' + base_name;
 	out_scores_folder = alignments_path + '';
 	
-	EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder, force_rerun=True, sam_suffix=sam_suffix, verbose_level=2);
+	return EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder, force_rerun=True, sam_suffix=sam_suffix, verbose_level=2, bp_dist=bp_dist);
 
-def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder, force_rerun=False, sam_suffix='', verbose_level=0):
+def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder, force_rerun=False, sam_suffix='', verbose_level=0, plot_results=False, bp_dist=10):
 	filter_reads_with_multiple_alignments = False;
 	reference_sequence_file = SCRIPT_PATH + '/../' + REFERENCE_GENOMES_ROOT + '/' + os.path.basename(dataset_name) + '.fa';
 	
@@ -90,10 +90,12 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 	if not os.path.exists(final_results_path):
 		print 'Creating output folders on path "%s".' % final_results_path;
 		os.makedirs(final_results_path);
+
+	ret_scores = {};
 	
 	all_accuracies = [];
 	all_rmsd = [];
-	all_scores = [];
+	# all_scores = [];
 	all_out_path_prefixes = [];
 	all_times = [];
 	all_execution_times = [];
@@ -117,8 +119,8 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 	all_summary_lines = [];
 	all_roc_curves = [];
 	all_precrec_curves = [];
-	all_distance_correctness = [];
-	all_distance_correctness_with_unmapped = [];
+	all_distance_accuracy = [];
+	all_distance_recall = [];
 	
 	input_sam_path = '';
 	if (len(sam_files) > 0):
@@ -132,9 +134,14 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 	for sam_file in sam_files:
 		current_sam_file += 1;
 
-		print 'Processing file: %s' % sam_file;
-		
+		sys.stderr.write('Processing file: %s\n' % sam_file);
 		sam_basename = os.path.splitext(os.path.basename(sam_file));
+
+		if not os.path.exists(sam_file):
+			sys.stderr.write('File "%s" does not exist! Skipping.\n' % sam_file);
+			continue;
+			# ret_scores[sam_basename[0]] = [distance_accuracy[1][10], distance_recall[1][10], percent_correctly_mapped_bases];
+
 		out_scores_path_prefix = out_scores_folder + '/' + sam_basename[0];
 		[is_sam_modified, modified_timestamp] = utility_sam.CheckSamModified(sam_file, out_scores_path_prefix);
 		modified_time = time.ctime(float(modified_timestamp));
@@ -142,11 +149,12 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 		execution_stats = utility_sam.GetExecutionStats(sam_file);
 		
 		sam_lines = ScoreAligned(hashed_reference, sam_file, shift_reverse_start=True);
-		[total_mapped, distance_histogram, distance_correctness, distance_correctness_with_unmapped, mapq_histograms, mapq_histograms_percentage, summary_line] = CalculateStats(num_unique_references, sam_lines, sam_basename[0], execution_stats, modified_time);
+		[hashed_sam_lines, num_sam_lines, num_unique_sam_lines] = utility_sam.HashSAMLines(sam_lines);
+		[total_mapped, distance_histogram, distance_accuracy, distance_recall, mapq_histograms, mapq_histograms_percentage, summary_line] = CalculateStats(num_unique_references, sam_lines, sam_basename[0], execution_stats, modified_time, intermediate_results_path=intermediate_results_path);
 
 		all_distance_histograms.append(distance_histogram);
-		all_distance_correctness.append(distance_correctness);
-		all_distance_correctness_with_unmapped.append(distance_correctness_with_unmapped);
+		all_distance_accuracy.append(distance_accuracy);
+		all_distance_recall.append(distance_recall);
 		all_mapq_histograms.append(mapq_histograms);
 		all_mapq_histograms_percentage.append(mapq_histograms_percentage);
 		all_total_mapped.append(total_mapped);
@@ -161,13 +169,14 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 		all_precrec_curves.append(precrec);
 
 		# [percent_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops] = analyze_correctly_mapped_bases.CountCorrectlyMappedBases(sam_file, hashed_reference, '');
-		percent_correctly_mapped_bases = 0.0;
-		num_correctly_mapped_bases = 1;
-		dataset_mapped_ref_num_m_ops = 2;
+		[precision_correctly_mapped_bases, recall_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops] = CountCorrectlyMappedBases(sam_basename[0], hashed_sam_lines, hashed_reference, '');
+		# percent_correctly_mapped_bases = 0.0;
+		# num_correctly_mapped_bases = 1;
+		# dataset_mapped_ref_num_m_ops = 2;
 
-		percent_correctly_mapped_bases_dataset_total = (float(num_correctly_mapped_bases) / float(dataset_total_mapped_ref_num_m_ops)) * 100.0;
-		all_correctly_mapped_bases.append([percent_correctly_mapped_bases, percent_correctly_mapped_bases_dataset_total, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops, dataset_total_mapped_ref_num_m_ops]);
-		all_correctly_mapped_bases_titles = ['percent_correctly_mapped_bases', 'num_correctly_mapped_bases', 'dataset_mapped_ref_num_m_ops', 'dataset_total_mapped_ref_num_m_ops'];
+		# percent_correctly_mapped_bases_dataset_total = (float(num_correctly_mapped_bases) / float(dataset_total_mapped_ref_num_m_ops)) * 100.0;
+		all_correctly_mapped_bases.append([precision_correctly_mapped_bases, recall_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops, dataset_total_mapped_ref_num_m_ops]);
+		all_correctly_mapped_bases_titles = ['precision_correctly_mapped_bases', 'recall_correctly_mapped_bases', 'num_correctly_mapped_bases', 'dataset_mapped_ref_num_m_ops', 'dataset_total_mapped_ref_num_m_ops'];
 		summary_line_correct_bases = '';
 		# summary_line_correct_bases += 'Percent correctly mapped bases: %.2f\n' % percent_correctly_mapped_bases;
 		summary_line_correct_bases += 'Number of correctly mapped bases: %d\n' % num_correctly_mapped_bases;
@@ -180,17 +189,21 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 		all_summary_lines.append(summary_line);
 		
 
-		print summary_line;
+		sys.stdout.write(summary_line + '\n');
+
+		ret_scores[sam_basename[0]] = [distance_accuracy[1][bp_dist], distance_recall[1][bp_dist], precision_correctly_mapped_bases, recall_correctly_mapped_bases];
+
+
 		
 		accuracies_path = intermediate_results_path + '/' + sam_basename[0];
 		if verbose_level > 0:
 			print 'Writing accuracies to prefix: "%s"' % total_prefix_intermediate;
-		WriteAccuracies(sam_lines, accuracies_path, write_duplicates=True);
+		WriteAccuracies(hashed_sam_lines, accuracies_path, write_duplicates=False);
 
 		WriteSummary(sam_files[0:current_sam_file], all_summary_lines, total_prefix + '.sum');
 		WriteHistogramsDistance(input_sam_path, all_distance_histograms, all_total_mapped, all_labels, num_unique_references, machine_name, genome_name, '%s-distance.hist' % (total_prefix));
-		WriteHistogramsDistance(input_sam_path, all_distance_correctness, all_total_mapped, all_labels, num_unique_references, machine_name, genome_name, '%s-distance_correct_mapped.csv' % (total_prefix));
-		WriteHistogramsDistance(input_sam_path, all_distance_correctness_with_unmapped, all_total_mapped, all_labels, num_unique_references, machine_name, genome_name, '%s-distance_correct_w_unmapped.csv' % (total_prefix));
+		WriteHistogramsDistance(input_sam_path, all_distance_accuracy, all_total_mapped, all_labels, num_unique_references, machine_name, genome_name, '%s-distance_correct_mapped.csv' % (total_prefix));
+		WriteHistogramsDistance(input_sam_path, all_distance_recall, all_total_mapped, all_labels, num_unique_references, machine_name, genome_name, '%s-distance_correct_w_unmapped.csv' % (total_prefix));
 		WriteHistogramsMapq(input_sam_path, all_mapq_histograms, all_total_mapped, all_labels, num_unique_references, machine_name, genome_name, '%s-mapq.hist' % (total_prefix));
 		
 		WriteROC(input_sam_path, all_roc_curves, all_labels, machine_name, genome_name, '%s-roc.csv' % (total_prefix));
@@ -202,7 +215,7 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 		print ' ';
 		print '====================================';
 	
-	### PlotHistogramsDistance(all_distance_correctness_with_unmapped, all_labels, machine_name + ', ' + genome_name, png_distances);
+	### PlotHistogramsDistance(all_distance_recall, all_labels, machine_name + ', ' + genome_name, png_distances);
 	#PlotHistogramsMapq(all_mapq_histograms_percentage, all_labels);
 	#PlotROC(all_roc_curves, all_labels, 'Fraction of reads [%]', 'Correctly mapped reads [%]', 'Curve of mapping accuracy (distance 0)', machine_name + ', ' + genome_name, png_roc);
 	### PlotROC(all_roc_curves, all_labels, 'False positive rate', 'True positive rate', 'Curve of mapping accuracy (distance 10)', machine_name + ', ' + genome_name, png_roc);
@@ -210,17 +223,17 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 	
 	# WriteSummary(sam_files, all_summary_lines, total_prefix + '.sum');
 	# WriteHistogramsDistance(input_sam_path, all_distance_histograms, all_total_mapped, all_labels, num_unique_references, machine_name, genome_name, '%s-distance.hist' % (total_prefix));
-	# WriteHistogramsDistance(input_sam_path, all_distance_correctness, all_total_mapped, all_labels, num_unique_references, machine_name, genome_name, '%s-distance_correct_mapped.csv' % (total_prefix));
-	# WriteHistogramsDistance(input_sam_path, all_distance_correctness_with_unmapped, all_total_mapped, all_labels, num_unique_references, machine_name, genome_name, '%s-distance_correct_w_unmapped.csv' % (total_prefix));
+	# WriteHistogramsDistance(input_sam_path, all_distance_accuracy, all_total_mapped, all_labels, num_unique_references, machine_name, genome_name, '%s-distance_correct_mapped.csv' % (total_prefix));
+	# WriteHistogramsDistance(input_sam_path, all_distance_recall, all_total_mapped, all_labels, num_unique_references, machine_name, genome_name, '%s-distance_correct_w_unmapped.csv' % (total_prefix));
 	# WriteHistogramsMapq(input_sam_path, all_mapq_histograms, all_total_mapped, all_labels, num_unique_references, machine_name, genome_name, '%s-mapq.hist' % (total_prefix));
 	
 	# WriteROC(input_sam_path, all_roc_curves, all_labels, machine_name, genome_name, '%s-roc.csv' % (total_prefix));
 	# WriteROC(input_sam_path, all_precrec_curves, all_labels, machine_name, genome_name, '%s-precision_recall.csv' % (total_prefix));
 	
-	if verbose_level > 0:
-		print 'Plotting simulated results...';
-	
-	plot_with_seabourne_v2.PlotSimulatedResults(total_prefix, sam_suffix, genome_name, SCRIPT_VERSION);
+	if (plot_results == True):
+		if verbose_level > 0:
+			print 'Plotting simulated results...';
+		plot_with_seabourne_v2.PlotSimulatedResults(total_prefix, sam_suffix, genome_name, SCRIPT_VERSION);
 
 	if verbose_level > 0:
 		print 'Post-analyzing SAM files...';
@@ -233,7 +246,7 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 	
 	#plt.show();
 	
-	return all_scores;
+	return ret_scores;
 
 def IncreaseHashCounts(hash_counts, param_name, param_increase_count):
 	try:
@@ -571,7 +584,199 @@ def GetROCFromEvaluatedSAM(sam_file, sam_lines, hashed_reference, allowed_distan
 	#return [tp_list, fp_list, tpr_list, fpr_list];
 	#return [tpr_list, fpr_list];
 
-def CalculateStats(num_unique_references, sam_lines, sam_basename, sam_execution_stats, sam_modified_time):
+def CountSameCigarOps(tested_cigar_pos_list, reference_cigar_pos_list):
+	num_same_ops = 0;
+	num_same_m_ops = 0;
+	num_same_i_ops = 0;
+	num_same_d_ops = 0;
+	num_same_other_ops = 0;
+	
+	i = 0;
+	j = 0;
+	
+	while (i < len(tested_cigar_pos_list) and j < len(reference_cigar_pos_list)):
+		# If the coordinates are not equal, increase one of them and continue.
+		if (tested_cigar_pos_list[i][2] < reference_cigar_pos_list[j][2]):
+			i += 1;
+			continue;
+		elif (tested_cigar_pos_list[i][2] > reference_cigar_pos_list[j][2]):
+			j += 1;
+			continue;
+		# If the coordinates are equal, then compare the CIGAR operations.
+		else:
+			# If the operation and the count are the same, we found a match.
+			if (tested_cigar_pos_list[i][0] == reference_cigar_pos_list[j][0] and
+			    tested_cigar_pos_list[i][1] == reference_cigar_pos_list[j][1]):
+				num_same_ops += 1;
+				
+				# This counts only match/mismatch operations that are the same.
+				if (tested_cigar_pos_list[i][1] in 'M=X'):
+					num_same_m_ops += 1;
+				# This counts only insertion operations that are the same.
+				elif (tested_cigar_pos_list[i][1] == 'I'):
+					num_same_i_ops += 1;
+				# This counts only deletion operations that are the same.
+				elif (tested_cigar_pos_list[i][1] == 'D'):
+					num_same_d_ops += 1;
+				# This counts all other operations that are the same.
+				else:
+					num_same_other_ops += 1;
+					
+				#print tested_cigar_pos_list[i];
+			else:
+				if (tested_cigar_pos_list[i][1] == 'I' and reference_cigar_pos_list[j][1] != 'I'):
+					i += 1;
+					continue;
+				elif (tested_cigar_pos_list[i][1] != 'I' and reference_cigar_pos_list[j][1] =='I'):
+					j += 1;
+					continue;
+				
+				#i = (i + 1) if (tested_cigar_pos_list[i][1] == 'I') else i;
+				#j = (j + 1) if (reference_cigar_pos_list[j][1] == 'I') else j;
+				#continue;
+			
+		i += 1;
+		j += 1;
+		
+	return [num_same_ops, num_same_m_ops, num_same_i_ops, num_same_d_ops, num_same_other_ops];
+
+def CountOperations(cigar_list):
+	num_m_ops = 0;
+	num_i_ops = 0;
+	num_d_ops = 0;
+	num_other_ops = 0;
+	
+	for cigar in cigar_list:
+		if (cigar[1] in 'M=X'):
+			num_m_ops += 1;
+		elif (cigar[1] == 'I'):
+			num_i_ops += 1;
+		elif (cigar[1] == 'D'):
+			num_d_ops += 1;
+		else:
+			num_other_ops += 1;
+
+	num_m_ops = 1 if (num_m_ops == 0) else num_m_ops;
+	num_i_ops = 1 if (num_i_ops == 0) else num_i_ops;
+	num_d_ops = 1 if (num_d_ops == 0) else num_d_ops;
+	num_other_ops = 1 if (num_other_ops == 0) else num_other_ops;
+	
+	return [num_m_ops, num_i_ops, num_d_ops, num_other_ops];
+
+def CountCorrectlyMappedBases(sam_basename, hashed_sam_lines, hashed_reference_sam, out_summary_prefix=''):
+	fp_out = None;
+	
+	out_file = out_summary_prefix + '.csv';
+	
+	if (out_summary_prefix != ''):
+		try:
+			fp_out = open(out_file, 'w');
+		except IOError:
+			sys.stderr.write('[%s] ERROR: Could not open file "%s" for writing!\n' % (__name__, out_file));
+			exit(1);
+
+	sys.stderr.write('Starting to count the number of correctly mapped bases in the tested SAM file!\n');
+
+	total_num_same_ops_individual_m = 0;
+	total_num_same_m_ops_individual_m = 0;
+	total_num_same_i_ops_individual_m = 0;
+	total_num_same_d_ops_individual_m = 0;
+	total_num_same_other_ops_individual_m = 0;
+	ref_num_m_ops_mapped_reads = 0;
+	ref_num_i_ops_mapped_reads = 0;
+	ref_num_d_ops_mapped_reads = 0;
+	dataset_total_ref_num_other_ops = 0;
+
+	ref_num_m_ops_all_reads = 0;
+	ref_num_i_ops_all_reads = 0;
+	ref_num_d_ops_all_reads = 0;
+
+	reference_cigar_pos_list_individual_m = {};
+	for qname in hashed_reference_sam.keys():
+		sam_reference = hashed_reference_sam[qname][0];
+		cigar_pos_list = sam_reference.CalcCigarStartingPositions(True);
+		reference_cigar_pos_list_individual_m[qname] = cigar_pos_list;
+		[ref_num_m_ops_individual_m, ref_num_i_ops_individual_m, ref_num_d_ops_individual_m, ref_num_other_ops_individual_m] = CountOperations(cigar_pos_list);
+		ref_num_m_ops_all_reads += ref_num_m_ops_individual_m;
+		ref_num_i_ops_all_reads += ref_num_i_ops_individual_m;
+		ref_num_d_ops_all_reads += ref_num_d_ops_individual_m;
+
+	i = 0;
+	for qname in hashed_sam_lines.keys():
+		i += 1;
+		if ((i % 100) == 0):
+			sys.stderr.write('\rLine %d' % (i));
+			sys.stderr.flush();
+
+		sam_line = hashed_sam_lines[qname][0];
+
+		if (sam_line.IsMapped() == False):
+			continue;
+		if ((qname in hashed_sam_lines) == False):
+			sys.stderr.write('\tERROR: Reference SAM does not contain qname "%s"!\n' % (qname));
+			continue;
+
+		# TODO: THIS NEEDS TO BE REMOVED OR IMPLEMENTED SOMEHOW DIFFERENTLY!!
+		# The point of this was that, BLASR doesn't conform to the SAM standard, and makes it difficult to
+		# uniformly evaluate the results!
+		if 'blasr' in sam_basename.lower():
+			qname = '/'.join(qname.split('/')[:-1]);
+			if sam_line.clip_count_front != 0 or sam_line.clip_count_back != 0:
+				print 'BLASR CIGAR contains clipping! Please revise clipped_pos! Read: "%s".' % sam_line.qname;
+
+		sam_reference = hashed_reference_sam[qname][0];
+
+		cigar_pos_list_individual_m = sam_line.CalcCigarStartingPositions(True);
+		# reference_cigar_pos_list_individual_m = sam_reference.CalcCigarStartingPositions(True);
+		reference_cigar_pos_list = reference_cigar_pos_list_individual_m[qname];
+		
+		[num_m_ops_individual_m, num_i_ops_individual_m, num_d_ops_individual_m, num_other_ops_individual_m] = CountOperations(cigar_pos_list_individual_m);
+		[ref_num_m_ops_individual_m, ref_num_i_ops_individual_m, ref_num_d_ops_individual_m, ref_num_other_ops_individual_m] = CountOperations(reference_cigar_pos_list);
+		
+		ref_num_m_ops_mapped_reads += ref_num_m_ops_individual_m;
+		ref_num_i_ops_mapped_reads += ref_num_i_ops_individual_m;
+		ref_num_d_ops_mapped_reads += ref_num_d_ops_individual_m;
+		dataset_total_ref_num_other_ops += ref_num_other_ops_individual_m;
+
+		[num_same_ops_individual_m, num_same_m_ops_individual_m, num_same_i_ops_individual_m, num_same_d_ops_individual_m, num_same_other_ops_individual_m] = CountSameCigarOps(cigar_pos_list_individual_m, reference_cigar_pos_list);
+		total_num_same_ops_individual_m += num_same_ops_individual_m;
+		total_num_same_m_ops_individual_m += num_same_m_ops_individual_m;
+		total_num_same_i_ops_individual_m += num_same_i_ops_individual_m;
+		total_num_same_d_ops_individual_m += num_same_d_ops_individual_m;
+		total_num_same_other_ops_individual_m += num_same_other_ops_individual_m;
+		sam_line.num_correct_m_ops = num_same_m_ops_individual_m;
+		# print num_same_m_ops_individual_m;
+		# exit(1);
+
+	precision_m = (float(total_num_same_m_ops_individual_m) / float(ref_num_m_ops_mapped_reads)) * 100.0;
+	precision_i = (float(total_num_same_i_ops_individual_m) / float(ref_num_i_ops_mapped_reads)) * 100.0;
+	precision_d = (float(total_num_same_d_ops_individual_m) / float(ref_num_d_ops_mapped_reads)) * 100.0;
+
+	recall_m = (float(total_num_same_m_ops_individual_m) / float(ref_num_m_ops_all_reads)) * 100.0;
+	recall_i = (float(total_num_same_i_ops_individual_m) / float(ref_num_i_ops_all_reads)) * 100.0;
+	recall_d = (float(total_num_same_d_ops_individual_m) / float(ref_num_d_ops_all_reads)) * 100.0;
+
+	if (('LAST' in sam_basename.upper()) == True and precision_m < 95.0):
+		print 'Tu sam!!!';
+		print sam_basename;
+		print 'total_num_same_m_ops_individual_m = %d' % total_num_same_m_ops_individual_m;
+		print 'ref_num_m_ops_mapped_reads = %d' % ref_num_m_ops_mapped_reads;
+		print '';
+		print '';
+		print '';
+
+	if (out_summary_prefix != ''):
+		fp_out.write('percent_correct_m\tnum_correct_m\tnum_m_ops_in_reference\n');
+		fp_out.write('%.2f\t%.2f\t%.2f\t%.2f\n' % (precision_m, recall_m, total_num_same_m_ops_individual_m, ref_num_m_ops_mapped_reads));
+		fp_out.close();
+	
+	sys.stderr.write('\n');
+
+	return [precision_m, recall_m, total_num_same_m_ops_individual_m, ref_num_m_ops_mapped_reads];
+	
+
+
+def CalculateStats(num_unique_references, sam_lines, sam_basename, sam_execution_stats, sam_modified_time, intermediate_results_path=''):
 	# Sort lines by three conditions: first by name which will help us to find duplicates,
 	# then by those that have the right orientation and reference name, so we can filter
 	# out those that are not good, and third by the minimum distance from the reference
@@ -579,7 +784,8 @@ def CalculateStats(num_unique_references, sam_lines, sam_basename, sam_execution
 #	sorted_lines_by_name = sorted(sam_lines, key=lambda sam_line: (sam_line.qname, (1 - sam_line.is_correct_ref_and_orient), (-sam_line.chosen_quality)));
 	sorted_lines_by_name = sorted(sam_lines, key=lambda sam_line: (sam_line.qname, (-sam_line.chosen_quality)));
 	# OVO SAM BIO ZAKOMENTIRAO U ZADNJOJ VERZIJI!! utility_sam.WriteSamLines(sorted_lines_by_name, ('temp/new_output-%s.txt' % sam_basename));
-	utility_sam.WriteSamLines(sorted_lines_by_name, ('temp/new_output-sorted-%s_%s.txt' % (sam_basename, SCRIPT_VERSION)));
+	if (intermediate_results_path != ''):
+		utility_sam.WriteSamLines(sorted_lines_by_name, ('%s/new_output-sorted-%s_%s.txt' % (intermediate_results_path, sam_basename, SCRIPT_VERSION)));
 	
 	# Filter unique SAM lines, where uniqueness is defined by the qname parameter.
 	# If there is more than one alignment with the same name, pick only the first one
@@ -607,11 +813,13 @@ def CalculateStats(num_unique_references, sam_lines, sam_basename, sam_execution
 				num_unambiguous_reads += 1;
 				num_unambiguous_mapped_reads += is_read_mapped;
 			unique_lines.append(sam_line);
+			sam_line.is_duplicate = False;
 			num_unmapped_reads += 1 if (sam_line.IsMapped() == False) else 0;
 			count = 1;
 			is_read_mapped = 0;
 		elif (sam_line.qname == previous_line.qname):
 			count += 1;
+			sam_line.is_duplicate = True;
 		previous_line = sam_line;
 		i += 1;
 	if (count == 1):
@@ -619,16 +827,17 @@ def CalculateStats(num_unique_references, sam_lines, sam_basename, sam_execution
 		num_unambiguous_mapped_reads += is_read_mapped;
 	
 	#OVO SAM BIO ZAKOMENTIRAO U ZADNJOJ VERZIJI!!
-	utility_sam.WriteSamLines(unique_lines, ('temp/new_output-unique-%s.txt' % sam_basename));
+	if (intermediate_results_path != ''):
+		utility_sam.WriteSamLines(unique_lines, ('%s/new_output-unique-%s.txt' % (intermediate_results_path, sam_basename)));
 	
 	[true_positive, false_positive, not_mapped] = utility_sam.GetBasicStats(unique_lines, allowed_distance=52);
 	total_mapped = true_positive + false_positive;
 	total_not_mapped = not_mapped + num_unique_references - total_mapped;
 	summary_line = '';
-	summary_line += 'true_positive / num_unique_references = %d (%.2f%%)\n' % (true_positive, (0.0 if (num_unique_references == 0) else ((float(true_positive) / float(num_unique_references))*100.0)) );
-	summary_line += 'false_positive / num_unique_references = %d (%.2f%%)\n' % (false_positive, (0.0 if (num_unique_references == 0) else ((float(false_positive) / float(num_unique_references))*100.0)) );
-	summary_line += 'true_positive / total_uniquely_mapped = %d (%.2f%%)\n' % (true_positive, (0.0 if (total_mapped == 0) else ((float(true_positive) / float(total_mapped))*100.0)) );
-	summary_line += 'false_positive / total_uniquely_mapped = %d (%.2f%%)\n' % (false_positive, (0.0 if (total_mapped == 0) else ((float(false_positive) / float(total_mapped))*100.0)) );
+	summary_line += '(recall)    TP / num_unique_references = %d (%.2f%%)\n' % (true_positive, (0.0 if (num_unique_references == 0) else ((float(true_positive) / float(num_unique_references))*100.0)) );
+	summary_line += '            FP / num_unique_references = %d (%.2f%%)\n' % (false_positive, (0.0 if (num_unique_references == 0) else ((float(false_positive) / float(num_unique_references))*100.0)) );
+	summary_line += '(precision) TP / total_uniquely_mapped) = %d (%.2f%%)\n' % (true_positive, (0.0 if (total_mapped == 0) else ((float(true_positive) / float(total_mapped))*100.0)) );
+	summary_line += '            FP / total_uniquely_mapped = %d (%.2f%%)\n' % (false_positive, (0.0 if (total_mapped == 0) else ((float(false_positive) / float(total_mapped))*100.0)) );
 	summary_line += 'total_mapped = %d (%.2f%%)\n' % (total_mapped, (0.0 if (num_unique_references == 0) else (float(total_mapped) / float(num_unique_references))*100.0) );
 	summary_line += 'not_mapped = %d (%.2f%%)\n' % (total_not_mapped, (0.0 if (num_unique_references == 0) else (float(total_not_mapped) / float(num_unique_references))*100.0) );
 	summary_line += 'num_alignments_in_sam = %d\n' % (len(sam_lines));
@@ -637,22 +846,22 @@ def CalculateStats(num_unique_references, sam_lines, sam_basename, sam_execution
 	summary_line += 'num_reads_in_sam = %d\n' % (len(unique_lines));
 	summary_line += 'num_unambiguous_reads = %d\n' % (num_unambiguous_reads);
 	
-	distance_limits = range(0, 50);
+	distance_limits = range(0, 60);
 	#[distance_histogram_x, distance_histogram_y] = utility_sam.GetDistanceHistogramStats(unique_lines, distance_limits);
 	[distance_histogram_x, distance_histogram_y] = utility_sam.GetDistanceHistogramStatsScaleDuplicates(unique_lines, distance_limits, scale_by_num_occurances=False);
 	distance_histogram = [distance_histogram_x, distance_histogram_y];
 	
 	# Correctness is the percentage of correctly mapped alignments to within the given distance. The percentage is with respect to only the number of mapped alignments.
-#	distance_correctness_y = [((float(value) / float((len(sam_lines) - num_unmapped_alignments)))*100.0) for value in distance_histogram_y];	# This is from v3 of this script.
-	# distance_correctness_y = [((float(value) / float(len(unique_lines) - num_unmapped_reads))*100.0) for value in distance_histogram_y];		# This is new, from v4 of the script.
-	distance_correctness_y = [((float(value) / float(len(unique_lines) - num_unmapped_reads))*100.0) if (len(unique_lines) - num_unmapped_reads) else 0.0 for value in distance_histogram_y];		# This is new, from v4 of the script.
-	distance_correctness = [distance_histogram_x, distance_correctness_y];
+#	distance_accuracy_y = [((float(value) / float((len(sam_lines) - num_unmapped_alignments)))*100.0) for value in distance_histogram_y];	# This is from v3 of this script.
+	# distance_accuracy_y = [((float(value) / float(len(unique_lines) - num_unmapped_reads))*100.0) for value in distance_histogram_y];		# This is new, from v4 of the script.
+	distance_accuracy_y = [((float(value) / float(len(unique_lines) - num_unmapped_reads))*100.0) if (len(unique_lines) - num_unmapped_reads) else 0.0 for value in distance_histogram_y];		# This is new, from v4 of the script.
+	distance_accuracy = [distance_histogram_x, distance_accuracy_y];
 
 	# Correctness with unmapped is the percentage of correctly mapped alignments with respect to the total number of reported alignments (including those marked not mapped). These include all reported alignments + number of reads that were not reported in the SAM file.
 #	max_number_of_alignments_with_unmapped = len(sam_lines) + (num_unique_references - len(unique_lines));	# This is from v3 of this script.
 	max_number_of_alignments_with_unmapped = num_unique_references;											# This is new, from v4 of the script.
-	distance_correctness_with_unmapped_y = [((float(value) / float(max_number_of_alignments_with_unmapped))*100.0) for value in distance_histogram_y];
-	distance_correctness_with_unmapped = [distance_histogram_x, distance_correctness_with_unmapped_y];
+	distance_recall_y = [((float(value) / float(max_number_of_alignments_with_unmapped))*100.0) for value in distance_histogram_y];
+	distance_recall = [distance_histogram_x, distance_recall_y];
 
 	summary_line += '-\n';
 	summary_line += 'distance_histogram[0]               = %d\n' % distance_histogram_y[0];
@@ -660,14 +869,14 @@ def CalculateStats(num_unique_references, sam_lines, sam_basename, sam_execution
 	summary_line += 'distance_histogram[49]              = %d\n' % distance_histogram_y[49];
 
 	summary_line += '-\n';
-	summary_line += 'distance_correctness[0]             = %.2f%%\n' % distance_correctness_y[0];
-	summary_line += 'distance_correctness[10]            = %.2f%%\n' % distance_correctness_y[10];
-	summary_line += 'distance_correctness[49]            = %.2f%%\n' % distance_correctness_y[49];
+	summary_line += 'distance_accuracy[0]             = %.2f%%\n' % distance_accuracy_y[0];
+	summary_line += 'distance_accuracy[10]            = %.2f%%\n' % distance_accuracy_y[10];
+	summary_line += 'distance_accuracy[49]            = %.2f%%\n' % distance_accuracy_y[49];
 
 	summary_line += '-\n';
-	summary_line += 'distance_correctness_w_unmapped[0]  = %.2f%%\n' % distance_correctness_with_unmapped_y[0];
-	summary_line += 'distance_correctness_w_unmapped[10] = %.2f%%\n' % distance_correctness_with_unmapped_y[10];
-	summary_line += 'distance_correctness_w_unmapped[49] = %.2f%%\n' % distance_correctness_with_unmapped_y[49];
+	summary_line += 'distance_recall[0]  = %.2f%%\n' % distance_recall_y[0];
+	summary_line += 'distance_recall[10] = %.2f%%\n' % distance_recall_y[10];
+	summary_line += 'distance_recall[49] = %.2f%%\n' % distance_recall_y[49];
 	
 	#print distance_histogram;
 	#print distance_histogram_percentage;
@@ -687,7 +896,7 @@ def CalculateStats(num_unique_references, sam_lines, sam_basename, sam_execution
 	
 	# print summary_line;
 	
-	return [total_mapped, distance_histogram, distance_correctness, distance_correctness_with_unmapped, mapq_histograms, mapq_histograms_percentage, summary_line];
+	return [total_mapped, distance_histogram, distance_accuracy, distance_recall, mapq_histograms, mapq_histograms_percentage, summary_line];
 
 def PlotROC(roc_curves, labels, xlabel_title, ylabel_title, figure_title, dataset_description, out_png_path=''):
 	fig = None;
@@ -963,7 +1172,7 @@ def WriteHistogramsMapq(sam_path, all_histograms, all_total_mapped, all_labels, 
 	fp.close();
 
 
-def WriteAccuracies(sam_lines, out_path_prefix, write_duplicates=True):
+def WriteAccuracies(hashed_sam_lines, out_path_prefix, write_duplicates=True):
 	out_path_accuracies = out_path_prefix + '_%s.acc' % (SCRIPT_VERSION);
 	
 	try:
@@ -972,15 +1181,28 @@ def WriteAccuracies(sam_lines, out_path_prefix, write_duplicates=True):
 		print 'ERROR: Could not open file "%s" for writing!' % out_path_accuracies;
 		return;
 	
-	sorted_sam_lines = sorted(sam_lines, reverse=True, key=lambda sam_line: (sam_line.IsMapped(), sam_line.min_distance));
+	# sorted_sam_lines = sorted(sam_lines, reverse=True, key=lambda sam_line: (sam_line.IsMapped(), sam_line.min_distance));
+	# sorted_sam_lines = sorted(sam_lines, reverse=True, key=lambda sam_line: (sam_line.IsMapped(), len(sam_line.cigar)));
+	# sorted_sam_lines = sorted(sam_lines, reverse=True, key=lambda sam_line: (sam_line.IsMapped(), len(sam_line.cigar)));
+
 	# sorted_sam_lines = sorted(sam_lines, reverse=True, key=lambda sam_line: sam_line.actual_ref_pos);
 	# sorted_sam_lines = sorted(sam_lines, reverse=True, key=lambda sam_line: sam_line.IsReverse());
 	# sorted_sam_lines = sorted(sam_lines, reverse=True, key=lambda sam_line: sam_line.chosen_quality);
+	unique_sam_lines = [];
+	for qname in hashed_sam_lines.keys():
+		sam_line = hashed_sam_lines[qname][0];
+		unique_sam_lines.append(sam_line);
+	# sorted_sam_lines = sorted(unique_sam_lines, reverse=True, key=lambda sam_line: (sam_line.IsMapped(), sam_line.min_distance));
+	sorted_sam_lines = sorted(unique_sam_lines, reverse=True, key=lambda sam_line: (sam_line.IsMapped(), sam_line.num_correct_m_ops));
 	for sam_line in sorted_sam_lines:
 		line = sam_line.FormatAccuracy();
-		if (write_duplicates == False and sam_line.is_duplicate != 0):
-			continue;
 		fp.write(line + '\n');
+
+	# for sam_line in sorted_sam_lines:
+	# 	line = sam_line.FormatAccuracy();
+	# 	if (write_duplicates == False and sam_line.is_duplicate == True):
+	# 		continue;
+	# 	fp.write(line + '\n');
 	
 	fp.close();
 

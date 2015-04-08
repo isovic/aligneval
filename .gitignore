@@ -31,11 +31,11 @@ aligners/
 temp/
 index/
 tools/
+results/
 
 evaluation/*
 aligners/*
 temp/*
 index/*
 tools/*
-
 

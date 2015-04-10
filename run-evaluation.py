@@ -14,7 +14,28 @@ import subprocess;
 import evalalignments4;
 from basicdefines import *;
 
-def register_scores(simulated_dataset, reference_name, eval_scores, precision_index, recall_index, ret_results_dataset_header, ret_results_genome_header, ret_results_table):
+# ### Deprecated
+# def register_scores(simulated_dataset, reference_name, eval_scores, precision_index, recall_index, ret_results_dataset_header, ret_results_genome_header, ret_results_table):
+# 	ret_results_dataset_header.append(simulated_dataset);
+# 	ret_results_genome_header.append(reference_name);
+# 	if (eval_scores != None and len(eval_scores.keys()) > 0):
+# 		# Add the new scores to the existing table.
+# 		for evaluated_mapper in sorted(eval_scores.keys()):
+# 			# If a mapper has not been evaluated before, fill the table with '-' characters.
+# 			if ((evaluated_mapper in ret_results_table) == False):
+# 				ret_results_table[evaluated_mapper] = ['-'] * (len(ret_results_dataset_header) - 2);
+# 			eval_score = eval_scores[evaluated_mapper];
+# 			ret_results_table[evaluated_mapper].append('%.2f / %.2f' % (eval_score[precision_index], eval_score[recall_index]));
+# 		# Check if there were mappers in other datasets which were not evaluated on this dataset, and fill the current row with '-' characters.
+# 		for previously_evaluated_mapper in sorted(ret_results_table.keys()):
+# 			if ((previously_evaluated_mapper in eval_scores.keys()) == False):
+# 				ret_results_table[previously_evaluated_mapper].append('-');
+# 	else:
+# 		# In this case, none of the mappers was evalated on this dataset. Fill the entire row with '-' characters.
+# 		for previously_evaluated_mapper in sorted(ret_results_table.keys()):
+# 			ret_results_table[previously_evaluated_mapper].append('-');
+
+def register_scores(simulated_dataset, reference_name, eval_scores, eval_scores_index, ret_results_dataset_header, ret_results_genome_header, ret_results_table):
 	ret_results_dataset_header.append(simulated_dataset);
 	ret_results_genome_header.append(reference_name);
 	if (eval_scores != None and len(eval_scores.keys()) > 0):
@@ -24,7 +45,7 @@ def register_scores(simulated_dataset, reference_name, eval_scores, precision_in
 			if ((evaluated_mapper in ret_results_table) == False):
 				ret_results_table[evaluated_mapper] = ['-'] * (len(ret_results_dataset_header) - 2);
 			eval_score = eval_scores[evaluated_mapper];
-			ret_results_table[evaluated_mapper].append('%.2f / %.2f' % (eval_score[precision_index], eval_score[recall_index]));
+			ret_results_table[evaluated_mapper].append('%.2f / %.2f' % (eval_score[eval_scores_index][1], eval_score[eval_scores_index][2]));
 		# Check if there were mappers in other datasets which were not evaluated on this dataset, and fill the current row with '-' characters.
 		for previously_evaluated_mapper in sorted(ret_results_table.keys()):
 			if ((previously_evaluated_mapper in eval_scores.keys()) == False):
@@ -93,10 +114,19 @@ if __name__ == "__main__":
 	num_processed_datasets = 0;
 	num_datasets = len(simulated_datasets) * len(genomes);
 
-	bp_dist = 50;
+	bp_dists = [10, 25, 50];
 
-	results_bp_dataset_header = ['Dataset'];	results_bp_genome_header = ['Genome'];	results_bp_table = {};
-	results_cb_dataset_header = ['Dataset'];	results_cb_genome_header = ['Genome'];	results_cb_table = {};
+	# results_bp_dataset_header = ['Dataset'];	results_bp_genome_header = ['Genome'];	results_bp_table = {};
+	# results_bp_dataset_header = ['Dataset'];	results_bp_genome_header = ['Genome']; #	results_bp_tables = [{} for bp_dist in bp_dists];
+	results_bp_dataset_headers = [];
+	results_bp_genome_headers = [];
+	results_bp_tables = [];
+	for bp_dist in bp_dists:
+		results_bp_tables.append({});
+		results_bp_dataset_headers.append(['Dataset']);
+		results_bp_genome_headers.append(['Genome']);
+	results_cb_dataset_header = ['Dataset'];		results_cb_genome_header = ['Genome'];	results_cb_table = {};
+	results_cb_strict_dataset_header = ['Dataset'];	results_cb_strict_genome_header = ['Genome'];	results_cb_strict_table = {};
 
 	machine_num = 0;
 	for simulated_dataset in simulated_datasets:
@@ -116,19 +146,31 @@ if __name__ == "__main__":
 			###########################################
 			machine_suffix = 'v1';
 
-			# eval_scores = evalalignments4.EvaluateAlignmentsFromPath(output_path, machine_suffix, bp_dist=bp_dist);
-			eval_scores = evalalignments4.EvaluateAlignmentsFromPath(output_path, 'GraphMap-v1', bp_dist=bp_dist);
+			# Return of the EvaluateAlignmentsFromPath function is organized in a list of tuples, where each tuple has 3 elements.
+			# The first len(bp_dists) tuples contain precision-recall information about mapping accuracy to within allowed distance. Each tuple looks like: (distance, precision, recall).
+			# Following is a tuple describing the per-base accuracy: (dummy_value, precision, recall).
+			# Following is a tuple describing more strict per-base accuracy (bases must align equally both in the reference and the read coordinates): (dummy_value, precision, recall).
+			eval_scores = evalalignments4.EvaluateAlignmentsFromPath(output_path, machine_suffix, bp_dists=bp_dists);
+			# eval_scores = evalalignments4.EvaluateAlignmentsFromPath(output_path, 'GraphMap-v1', bp_dists=bp_dists);
 			print eval_scores;
 			print '';
 
 			### Use this to select only requeired mappers for reporting the results:
 			# eval_scores = filter_only_select_mappers(['GraphMap'], eval_scores);
 
-			# Precision and recall for mapping position, allowed within +-bp distance from expected location.
-			register_scores(simulated_dataset, reference_name, eval_scores, 0, 1, results_bp_dataset_header, results_bp_genome_header, results_bp_table);
+			# # Precision and recall for mapping position, allowed within +-bp distance from expected location.
+			# register_scores(simulated_dataset, reference_name, eval_scores, 0, 1, results_bp_dataset_header, results_bp_genome_header, results_bp_table);
+			current_ret_value = 0;
+			while (current_ret_value < len(bp_dists)):
+				# register_scores(simulated_dataset, reference_name, eval_scores, (current_ret_value*3 + 1), (current_ret_value*3 + 2), results_bp_dataset_header, results_bp_genome_header, results_bp_tables[i]);
+				register_scores(simulated_dataset, reference_name, eval_scores, current_ret_value, results_bp_dataset_headers[current_ret_value], results_bp_genome_headers[current_ret_value], results_bp_tables[current_ret_value]);
+				current_ret_value += 1;
 
 			# Precision and recall for correctly called bases.
-			register_scores(simulated_dataset, reference_name, eval_scores, 2, 3, results_cb_dataset_header, results_cb_genome_header, results_cb_table);
+			register_scores(simulated_dataset, reference_name, eval_scores, len(bp_dists), results_cb_dataset_header, results_cb_genome_header, results_cb_table);
+
+			# Precision and recall for correctly called bases.
+			register_scores(simulated_dataset, reference_name, eval_scores, len(bp_dists) + 1, results_cb_strict_dataset_header, results_cb_strict_genome_header, results_cb_strict_table);
 
 
 
@@ -138,28 +180,47 @@ if __name__ == "__main__":
 			
 		machine_num += 1;
 
-	table_bp = convert_results_table(results_bp_dataset_header, results_bp_genome_header, results_bp_table);
+	# table_bp = convert_results_table(results_bp_dataset_header, results_bp_genome_header, results_bp_table);
+	# tables_bp = [convert_results_table(results_bp_dataset_header, results_bp_genome_header, results_bp_table) for results_bp_table in results_bp_tables]
+	tables_bp = [convert_results_table(results_bp_dataset_headers[i], results_bp_genome_headers[i], results_bp_tables[i]) for i in range(len(results_bp_tables))]
 	table_cb = convert_results_table(results_cb_dataset_header, results_cb_genome_header, results_cb_table);
-	sys.stdout.write('Precision / Recall for mapping position to within +-bp distance:\n');
+	table_cb_strict = convert_results_table(results_cb_strict_dataset_header, results_cb_strict_genome_header, results_cb_strict_table);
 
-	write_table(sys.stdout, table_bp);
+	i = 0;
+	while (i < len(bp_dists)):
+		sys.stdout.write('Precision / Recall for mapping position to within +-%dbp distance:\n' % (bp_dists[i]));
+		write_table(sys.stdout, tables_bp[i]);
+		sys.stdout.write('\n');
+		i += 1;
+
 	sys.stdout.write('\n');
 	sys.stdout.write('Precision / Recall for number of correctly mapped bases:\n');
 	write_table(sys.stdout, table_cb);
+	sys.stdout.write('\n');
+	sys.stdout.write('Strict Precision / Recall for number of correctly mapped bases:\n');
+	write_table(sys.stdout, table_cb_strict);
 
 	### Writing the results to files.
 	if not os.path.exists(RESULTS_PATH_ROOT_ABS):
 		sys.stderr.write('Creating folder "%s".\n' % (RESULTS_PATH_ROOT_ABS));
 		os.makedirs(RESULTS_PATH_ROOT_ABS);
 
-	out_path_bp = '%s/precision_recall-%dbp_distance.csv' % (RESULTS_PATH_ROOT_ABS, bp_dist);
-	fp_out_bp = open(out_path_bp, 'w');
-	write_table(fp_out_bp, table_bp);
-	fp_out_bp.close();
+	i = 0;
+	while (i < len(bp_dists)):
+		out_path_bp = '%s/precision_recall-%dbp_distance.csv' % (RESULTS_PATH_ROOT_ABS, bp_dists[i]);
+		fp_out_bp = open(out_path_bp, 'w');
+		write_table(fp_out_bp, tables_bp[i]);
+		fp_out_bp.close();
+		i += 1;
 
 	out_path_cb = '%s/precision_recall-correct_bases.csv' % (RESULTS_PATH_ROOT_ABS);
 	fp_out_cb = open(out_path_cb, 'w');
 	write_table(fp_out_cb, table_cb);
+	fp_out_cb.close();
+
+	out_path_cb = '%s/precision_recall-strict-correct_bases.csv' % (RESULTS_PATH_ROOT_ABS);
+	fp_out_cb = open(out_path_cb, 'w');
+	write_table(fp_out_cb, table_cb_strict);
 	fp_out_cb.close();
 
 

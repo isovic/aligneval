@@ -33,7 +33,7 @@ import utility_sam;
 
 
 
-def EvaluateAlignmentsFromPath(alignments_path, sam_suffix='', bp_dist=10):
+def EvaluateAlignmentsFromPath(alignments_path, sam_suffix='', bp_dists=[10]):
 	dataset_name = alignments_path;
 	current_folder_depth = len(alignments_path.split('/'));
 	sam_files = find_files(alignments_path, '*%s.sam' % sam_suffix, (current_folder_depth));
@@ -47,9 +47,9 @@ def EvaluateAlignmentsFromPath(alignments_path, sam_suffix='', bp_dist=10):
 	# out_scores_folder = SCRIPT_PATH + '/../' + RESULTS_ROOT + '/' + base_name;
 	out_scores_folder = alignments_path + '';
 	
-	return EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder, force_rerun=True, sam_suffix=sam_suffix, verbose_level=2, bp_dist=bp_dist);
+	return EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder, force_rerun=True, sam_suffix=sam_suffix, verbose_level=2, bp_dists=bp_dists);
 
-def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder, force_rerun=False, sam_suffix='', verbose_level=0, plot_results=False, bp_dist=10):
+def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder, force_rerun=False, sam_suffix='', verbose_level=0, plot_results=False, bp_dists=[10]):
 	filter_reads_with_multiple_alignments = False;
 	reference_sequence_file = SCRIPT_PATH + '/../' + REFERENCE_GENOMES_ROOT + '/' + os.path.basename(dataset_name) + '.fa';
 	
@@ -107,6 +107,7 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 	all_labels = [];
 	all_total_mapped = [];
 	all_correctly_mapped_bases = [];
+	all_correctly_mapped_bases_strict = [];
 	all_correctly_mapped_bases_titles = [];
 	
 	total_sum_path = out_scores_folder + '/total-' + machine_name + '-' + genome_name + '-' + sam_suffix + '.sum';
@@ -169,21 +170,26 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 		all_precrec_curves.append(precrec);
 
 		# [percent_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops] = analyze_correctly_mapped_bases.CountCorrectlyMappedBases(sam_file, hashed_reference, '');
-		[precision_correctly_mapped_bases, recall_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops] = CountCorrectlyMappedBases(sam_basename[0], hashed_sam_lines, hashed_reference, '');
+		[precision_correctly_mapped_bases, recall_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops] = CountCorrectlyMappedBases(sam_basename[0], hashed_sam_lines, hashed_reference, '', use_strict=False);
+		[precision_correctly_mapped_bases_strict, recall_correctly_mapped_bases_strict, num_correctly_mapped_bases_strict, dataset_mapped_ref_num_m_ops_strict] = CountCorrectlyMappedBases(sam_basename[0], hashed_sam_lines, hashed_reference, '', use_strict=True);
 		# percent_correctly_mapped_bases = 0.0;
 		# num_correctly_mapped_bases = 1;
 		# dataset_mapped_ref_num_m_ops = 2;
 
 		# percent_correctly_mapped_bases_dataset_total = (float(num_correctly_mapped_bases) / float(dataset_total_mapped_ref_num_m_ops)) * 100.0;
 		all_correctly_mapped_bases.append([precision_correctly_mapped_bases, recall_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops, dataset_total_mapped_ref_num_m_ops]);
+		all_correctly_mapped_bases_strict.append([precision_correctly_mapped_bases_strict, recall_correctly_mapped_bases_strict, num_correctly_mapped_bases_strict, dataset_mapped_ref_num_m_ops_strict, dataset_total_mapped_ref_num_m_ops]);
 		all_correctly_mapped_bases_titles = ['precision_correctly_mapped_bases', 'recall_correctly_mapped_bases', 'num_correctly_mapped_bases', 'dataset_mapped_ref_num_m_ops', 'dataset_total_mapped_ref_num_m_ops'];
 		summary_line_correct_bases = '';
 		# summary_line_correct_bases += 'Percent correctly mapped bases: %.2f\n' % percent_correctly_mapped_bases;
-		summary_line_correct_bases += 'Number of correctly mapped bases: %d\n' % num_correctly_mapped_bases;
-		summary_line_correct_bases += 'Number of M ops in mapped reads: %d\n' % dataset_mapped_ref_num_m_ops;
-		summary_line_correct_bases += 'Number of M ops in all input reads: %d\n' % dataset_total_mapped_ref_num_m_ops;
-		summary_line_correct_bases += 'Percent of correct M ops in mapped reads: %.2f\n' % ((float(num_correctly_mapped_bases) / float(dataset_mapped_ref_num_m_ops)) * 100.0);
-		summary_line_correct_bases += 'Percent of correct M ops in all input reads: %.2f\n' % ((float(num_correctly_mapped_bases) / float(dataset_total_mapped_ref_num_m_ops)) * 100.0);
+		# summary_line_correct_bases += 'Number of correctly mapped bases: %d\n' % num_correctly_mapped_bases;
+		# summary_line_correct_bases += 'Number of M ops in mapped reads: %d\n' % dataset_mapped_ref_num_m_ops;
+		# summary_line_correct_bases += 'Number of M ops in all input reads: %d\n' % dataset_total_mapped_ref_num_m_ops;
+		summary_line_correct_bases += 'Precision (per-base): %.2f\n' % (precision_correctly_mapped_bases);
+		summary_line_correct_bases += 'Recall (per-base): %.2f\n' % (recall_correctly_mapped_bases);
+		summary_line_correct_bases += '(strict) Precision (per-base): %.2f\n' % (precision_correctly_mapped_bases_strict);
+		summary_line_correct_bases += '(strict) Recall (per-base): %.2f\n' % (recall_correctly_mapped_bases);
+		# summary_line_correct_bases += 'Percent of correct M ops in all input reads: %.2f\n' % ((float(num_correctly_mapped_bases) / float(dataset_total_mapped_ref_num_m_ops)) * 100.0);
 		summary_line += summary_line_correct_bases;
 
 		all_summary_lines.append(summary_line);
@@ -191,7 +197,17 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 
 		sys.stdout.write(summary_line + '\n');
 
-		ret_scores[sam_basename[0]] = [distance_accuracy[1][bp_dist], distance_recall[1][bp_dist], precision_correctly_mapped_bases, recall_correctly_mapped_bases];
+
+		# ret_scores[sam_basename[0]] = [	distance_accuracy[1][bp_dist], distance_recall[1][bp_dist],
+		# 								precision_correctly_mapped_bases, recall_correctly_mapped_bases,
+		# 								precision_correctly_mapped_bases_strict, recall_correctly_mapped_bases_strict];
+		ret_scores[sam_basename[0]] = [];
+		for bp_dist in bp_dists:
+			bp_precrec = [(bp_dist, distance_accuracy[1][bp_dist], distance_recall[1][bp_dist])];
+			ret_scores[sam_basename[0]] += bp_precrec;
+
+		ret_scores[sam_basename[0]] += [(0, precision_correctly_mapped_bases, recall_correctly_mapped_bases),
+										(0, precision_correctly_mapped_bases_strict, recall_correctly_mapped_bases_strict)];
 
 
 		
@@ -210,6 +226,7 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 		WriteROC(input_sam_path, all_precrec_curves, all_labels, machine_name, genome_name, '%s-precision_recall.csv' % (total_prefix));
 	
 		WriteCorrectBaseCount(input_sam_path, all_correctly_mapped_bases_titles, all_correctly_mapped_bases, all_labels, machine_name, genome_name , '%s-correct_bases.csv' % (total_prefix));
+		WriteCorrectBaseCount(input_sam_path, all_correctly_mapped_bases_titles, all_correctly_mapped_bases_strict, all_labels, machine_name, genome_name , '%s-strict-correct_bases.csv' % (total_prefix));
 
 	if verbose_level > 0:
 		print ' ';
@@ -640,6 +657,63 @@ def CountSameCigarOps(tested_cigar_pos_list, reference_cigar_pos_list):
 		
 	return [num_same_ops, num_same_m_ops, num_same_i_ops, num_same_d_ops, num_same_other_ops];
 
+def CountSameCigarOpsStrict(tested_cigar_pos_list, reference_cigar_pos_list):
+	num_same_ops = 0;
+	num_same_m_ops = 0;
+	num_same_i_ops = 0;
+	num_same_d_ops = 0;
+	num_same_other_ops = 0;
+	
+	i = 0;
+	j = 0;
+	
+	while (i < len(tested_cigar_pos_list) and j < len(reference_cigar_pos_list)):
+		# If the coordinates are not equal, increase one of them and continue.
+		if (tested_cigar_pos_list[i][2] < reference_cigar_pos_list[j][2]):
+			i += 1;
+			continue;
+		elif (tested_cigar_pos_list[i][2] > reference_cigar_pos_list[j][2]):
+			j += 1;
+			continue;
+		# If the coordinates are equal, then compare the CIGAR operations.
+		else:
+			# If the operation and the count are the same, we found a match.
+			if (tested_cigar_pos_list[i][0] == reference_cigar_pos_list[j][0] and
+			    tested_cigar_pos_list[i][1] == reference_cigar_pos_list[j][1] and
+			    tested_cigar_pos_list[i][3] == reference_cigar_pos_list[j][3]):
+				num_same_ops += 1;
+				
+				# This counts only match/mismatch operations that are the same.
+				if (tested_cigar_pos_list[i][1] in 'M=X'):
+					num_same_m_ops += 1;
+				# This counts only insertion operations that are the same.
+				elif (tested_cigar_pos_list[i][1] == 'I'):
+					num_same_i_ops += 1;
+				# This counts only deletion operations that are the same.
+				elif (tested_cigar_pos_list[i][1] == 'D'):
+					num_same_d_ops += 1;
+				# This counts all other operations that are the same.
+				else:
+					num_same_other_ops += 1;
+					
+				#print tested_cigar_pos_list[i];
+			else:
+				if (tested_cigar_pos_list[i][1] == 'I' and reference_cigar_pos_list[j][1] != 'I'):
+					i += 1;
+					continue;
+				elif (tested_cigar_pos_list[i][1] != 'I' and reference_cigar_pos_list[j][1] =='I'):
+					j += 1;
+					continue;
+				
+				#i = (i + 1) if (tested_cigar_pos_list[i][1] == 'I') else i;
+				#j = (j + 1) if (reference_cigar_pos_list[j][1] == 'I') else j;
+				#continue;
+			
+		i += 1;
+		j += 1;
+		
+	return [num_same_ops, num_same_m_ops, num_same_i_ops, num_same_d_ops, num_same_other_ops];
+
 def CountOperations(cigar_list):
 	num_m_ops = 0;
 	num_i_ops = 0;
@@ -663,7 +737,7 @@ def CountOperations(cigar_list):
 	
 	return [num_m_ops, num_i_ops, num_d_ops, num_other_ops];
 
-def CountCorrectlyMappedBases(sam_basename, hashed_sam_lines, hashed_reference_sam, out_summary_prefix=''):
+def CountCorrectlyMappedBases(sam_basename, hashed_sam_lines, hashed_reference_sam, out_summary_prefix='', use_strict=False):
 	fp_out = None;
 	
 	out_file = out_summary_prefix + '.csv';
@@ -738,7 +812,10 @@ def CountCorrectlyMappedBases(sam_basename, hashed_sam_lines, hashed_reference_s
 		ref_num_d_ops_mapped_reads += ref_num_d_ops_individual_m;
 		dataset_total_ref_num_other_ops += ref_num_other_ops_individual_m;
 
-		[num_same_ops_individual_m, num_same_m_ops_individual_m, num_same_i_ops_individual_m, num_same_d_ops_individual_m, num_same_other_ops_individual_m] = CountSameCigarOps(cigar_pos_list_individual_m, reference_cigar_pos_list);
+		if (use_strict == False):
+			[num_same_ops_individual_m, num_same_m_ops_individual_m, num_same_i_ops_individual_m, num_same_d_ops_individual_m, num_same_other_ops_individual_m] = CountSameCigarOps(cigar_pos_list_individual_m, reference_cigar_pos_list);
+		else:
+			[num_same_ops_individual_m, num_same_m_ops_individual_m, num_same_i_ops_individual_m, num_same_d_ops_individual_m, num_same_other_ops_individual_m] = CountSameCigarOpsStrict(cigar_pos_list_individual_m, reference_cigar_pos_list);
 		total_num_same_ops_individual_m += num_same_ops_individual_m;
 		total_num_same_m_ops_individual_m += num_same_m_ops_individual_m;
 		total_num_same_i_ops_individual_m += num_same_i_ops_individual_m;
@@ -756,14 +833,14 @@ def CountCorrectlyMappedBases(sam_basename, hashed_sam_lines, hashed_reference_s
 	recall_i = (float(total_num_same_i_ops_individual_m) / float(ref_num_i_ops_all_reads)) * 100.0;
 	recall_d = (float(total_num_same_d_ops_individual_m) / float(ref_num_d_ops_all_reads)) * 100.0;
 
-	if (('LAST' in sam_basename.upper()) == True and precision_m < 95.0):
-		print 'Tu sam!!!';
-		print sam_basename;
-		print 'total_num_same_m_ops_individual_m = %d' % total_num_same_m_ops_individual_m;
-		print 'ref_num_m_ops_mapped_reads = %d' % ref_num_m_ops_mapped_reads;
-		print '';
-		print '';
-		print '';
+	# if (('LAST' in sam_basename.upper()) == True and precision_m < 95.0):
+	# 	print 'Tu sam!!!';
+	# 	print sam_basename;
+	# 	print 'total_num_same_m_ops_individual_m = %d' % total_num_same_m_ops_individual_m;
+	# 	print 'ref_num_m_ops_mapped_reads = %d' % ref_num_m_ops_mapped_reads;
+	# 	print '';
+	# 	print '';
+	# 	print '';
 
 	if (out_summary_prefix != ''):
 		fp_out.write('percent_correct_m\tnum_correct_m\tnum_m_ops_in_reference\n');
@@ -1192,8 +1269,8 @@ def WriteAccuracies(hashed_sam_lines, out_path_prefix, write_duplicates=True):
 	for qname in hashed_sam_lines.keys():
 		sam_line = hashed_sam_lines[qname][0];
 		unique_sam_lines.append(sam_line);
-	# sorted_sam_lines = sorted(unique_sam_lines, reverse=True, key=lambda sam_line: (sam_line.IsMapped(), sam_line.min_distance));
-	sorted_sam_lines = sorted(unique_sam_lines, reverse=True, key=lambda sam_line: (sam_line.IsMapped(), sam_line.num_correct_m_ops));
+	sorted_sam_lines = sorted(unique_sam_lines, reverse=True, key=lambda sam_line: (sam_line.IsMapped(), sam_line.min_distance));
+	# sorted_sam_lines = sorted(unique_sam_lines, reverse=True, key=lambda sam_line: (sam_line.IsMapped(), sam_line.num_correct_m_ops));
 	for sam_line in sorted_sam_lines:
 		line = sam_line.FormatAccuracy();
 		fp.write(line + '\n');

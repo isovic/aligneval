@@ -463,7 +463,8 @@ class SAMLine:
 			cigar_op = cigar_list[i][1];
 			
 			if (separate_matches_in_individual_bases == False):
-				cigar_pos_list.append([cigar_count + 0, cigar_op + '', pos_on_reference + 0]);
+				# Edit 10.04.2015. I saw that the pos_on_read value was missing here, so I added it too:
+				cigar_pos_list.append([cigar_count + 0, cigar_op + '', pos_on_reference + 0, pos_on_read + 0]);
 				#if (cigar_op in 'MDSH=X'):
 					#pos_on_reference += cigar_count;
 				
@@ -499,7 +500,7 @@ class SAMLine:
 			i += 1;
 		
 		return cigar_pos_list;
-	
+
 	def CalcNumMappedBases(self):
 		num_mapped_bases = len(self.seq);
 		if (self.clip_op_front == 'S'):

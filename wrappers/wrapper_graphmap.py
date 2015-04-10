@@ -16,6 +16,9 @@ ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap/bin/Linux-x64/';
 BIN = 'graphmap';
 MAPPER_NAME = 'GraphMap';
 
+ALIGNER_PATH = SCRIPT_PATH + '/../../../graphmap/bin';
+BIN = 'graphmap-not_release';
+
 
 
 # Function 'run' should provide a standard interface for running a mapper. Given input parameters, it should run the

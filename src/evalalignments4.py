@@ -170,7 +170,8 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 		all_precrec_curves.append(precrec);
 
 		# [percent_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops] = analyze_correctly_mapped_bases.CountCorrectlyMappedBases(sam_file, hashed_reference, '');
-		[precision_correctly_mapped_bases, recall_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops] = CountCorrectlyMappedBases(sam_basename[0], hashed_sam_lines, hashed_reference, '', use_strict=False);
+		# [precision_correctly_mapped_bases, recall_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops] = CountCorrectlyMappedBases(sam_basename[0], hashed_sam_lines, hashed_reference, '', use_strict=False);
+		[precision_correctly_mapped_bases, recall_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops] = [0.0, 0.0, 0, 0];
 		[precision_correctly_mapped_bases_strict, recall_correctly_mapped_bases_strict, num_correctly_mapped_bases_strict, dataset_mapped_ref_num_m_ops_strict] = CountCorrectlyMappedBases(sam_basename[0], hashed_sam_lines, hashed_reference, '', use_strict=True);
 		# percent_correctly_mapped_bases = 0.0;
 		# num_correctly_mapped_bases = 1;
@@ -185,14 +186,18 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 		# summary_line_correct_bases += 'Number of correctly mapped bases: %d\n' % num_correctly_mapped_bases;
 		# summary_line_correct_bases += 'Number of M ops in mapped reads: %d\n' % dataset_mapped_ref_num_m_ops;
 		# summary_line_correct_bases += 'Number of M ops in all input reads: %d\n' % dataset_total_mapped_ref_num_m_ops;
+		summary_line_correct_bases += 'Number of correctly mapped bases: %d\n' % num_correctly_mapped_bases;
+		summary_line_correct_bases += 'Number of mapped bases: %d\n' % dataset_mapped_ref_num_m_ops;
+
 		summary_line_correct_bases += 'Precision (per-base): %.2f\n' % (precision_correctly_mapped_bases);
 		summary_line_correct_bases += 'Recall (per-base): %.2f\n' % (recall_correctly_mapped_bases);
 		summary_line_correct_bases += '(strict) Precision (per-base): %.2f\n' % (precision_correctly_mapped_bases_strict);
-		summary_line_correct_bases += '(strict) Recall (per-base): %.2f\n' % (recall_correctly_mapped_bases);
+		summary_line_correct_bases += '(strict) Recall (per-base): %.2f\n' % (recall_correctly_mapped_bases_strict);
 		# summary_line_correct_bases += 'Percent of correct M ops in all input reads: %.2f\n' % ((float(num_correctly_mapped_bases) / float(dataset_total_mapped_ref_num_m_ops)) * 100.0);
 		summary_line += summary_line_correct_bases;
 
 		all_summary_lines.append(summary_line);
+
 		
 
 		sys.stdout.write(summary_line + '\n');
@@ -737,7 +742,144 @@ def CountOperations(cigar_list):
 	
 	return [num_m_ops, num_i_ops, num_d_ops, num_other_ops];
 
+def CompareBasePositions(query_sam, ref_sam):
+	qsam_ref_coords = [None] * query_sam.CalcReadLengthFromCigar();
+	rsam_ref_coords = [None] * ref_sam.CalcReadLengthFromCigar();
+
+	num_mapped_bases = len(qsam_ref_coords) - query_sam.clip_count_front - query_sam.clip_count_back;
+	num_ref_bases = len(rsam_ref_coords) - ref_sam.clip_count_front - ref_sam.clip_count_back;
+
+	if (len(qsam_ref_coords) < len(rsam_ref_coords)):
+		# sys.stderr.write('Warning: Mappers output does not conform to SAM format specification! CIGAR field does not specify sequence of equal length as in the input FASTA file. Possibly hard clipping operations are missing.\n');	
+		return [0, num_mapped_bases, num_ref_bases];
+
+	query_cigpos = query_sam.CalcCigarStartingPositions(False);
+	for cigpos in query_cigpos:
+		[cig_count, cig_op, pos_on_ref, pos_on_query] = cigpos;
+		if (cig_op in 'M=X'):
+			qsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = range(pos_on_ref, (pos_on_ref + cig_count));
+		elif (cig_op == 'I'):
+			qsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = [-1]*cig_count;
+		elif (cig_op == 'S'):
+			qsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = [-3]*cig_count;
+		elif (cig_op == 'H'):
+			qsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = [-4]*cig_count;
+
+	ref_cigpos = ref_sam.CalcCigarStartingPositions(False);
+	for cigpos in ref_cigpos:
+		[cig_count, cig_op, pos_on_ref, pos_on_query] = cigpos;
+		if (cig_op in 'M=X'):
+			rsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = range(pos_on_ref, (pos_on_ref + cig_count));
+		elif (cig_op == 'I'):
+			rsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = [-1]*cig_count;
+		elif (cig_op == 'S'):
+			rsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = [-3]*cig_count;
+		elif (cig_op == 'H'):
+			rsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = [-4]*cig_count;
+
+	num_correct_bases = 0;
+	i = 0;
+	while (i < len(qsam_ref_coords)):
+		# Skip the clipped bases:
+		if (qsam_ref_coords[i] != -3 and qsam_ref_coords[i]!= -4):
+			# Count the equal bases
+			if (qsam_ref_coords[i] == rsam_ref_coords[i]):
+				num_correct_bases += 1;
+			# else:
+			# 	# Just debug output.
+			# 	print 'qsam[i] = %d\trsam[i] = %d\tseq[i] = %s' % (qsam_ref_coords[i], rsam_ref_coords[i], ref_sam.seq[i]);
+		i += 1;
+
+	# print query_sam.cigar;
+	# print qsam_ref_coords;
+	# print query_sam.original_line;
+	# print '';
+	# print 'num_correct_bases = %d' % num_correct_bases;
+	# print 'num_mapped_bases = %d' % num_mapped_bases;
+	# print ref_sam.original_line;
+
+	return [num_correct_bases, num_mapped_bases, num_ref_bases];
+
+
+
+	# exit(1);
+
 def CountCorrectlyMappedBases(sam_basename, hashed_sam_lines, hashed_reference_sam, out_summary_prefix='', use_strict=False):
+	if (use_strict == False):
+		return [0.0, 0.0, 0, 0];
+
+	fp_out = None;
+	out_file = out_summary_prefix + '.csv';
+	if (out_summary_prefix != ''):
+		try:
+			fp_out = open(out_file, 'w');
+		except IOError:
+			sys.stderr.write('[%s] ERROR: Could not open file "%s" for writing!\n' % (__name__, out_file));
+			exit(1);
+	sys.stderr.write('Starting to count the number of correctly mapped bases in the tested SAM file!\n');
+
+
+	total_ref_bases = 0;
+	for qname in hashed_reference_sam.keys():
+		ref_sam = hashed_reference_sam[qname][0];
+		# total_ref_bases += (ref_sam.CalcReadLengthFromCigar() - ref_sam.clip_count_front - ref_sam.clip_count_back);
+		num_ref_bases = len(ref_sam.seq);
+		# Remove the counts of soft-clipped bases from the read length. We ignore hard clipped bases, because they are
+		# not present in the SEQ field anyway.
+		num_ref_bases -= (ref_sam.clip_count_front if ref_sam.clip_op_front == 'S' else 0);
+		num_ref_bases -= (ref_sam.clip_count_back if ref_sam.clip_op_back == 'S' else 0);
+		total_ref_bases += num_ref_bases;
+
+	sum_correct_bases = 0;
+	sum_mapped_bases = 0;
+	sum_ref_bases = 0;
+
+	i = 0;
+	for qname in hashed_sam_lines.keys():
+		i += 1;
+		if ((i % 100) == 0):
+			sys.stderr.write('\rLine %d' % (i));
+			sys.stderr.flush();
+
+		sam_line = hashed_sam_lines[qname][0];
+
+		if (sam_line.IsMapped() == False):
+			continue;
+		if ((qname in hashed_sam_lines) == False):
+			sys.stderr.write('\tERROR: Reference SAM does not contain qname "%s"!\n' % (qname));
+			continue;
+
+		# TODO: THIS NEEDS TO BE REMOVED OR IMPLEMENTED SOMEHOW DIFFERENTLY!!
+		# The point of this was that, BLASR doesn't conform to the SAM standard, and makes it difficult to
+		# uniformly evaluate the results!
+		if 'blasr' in sam_basename.lower():
+			qname = '/'.join(qname.split('/')[:-1]);
+			if sam_line.clip_count_front != 0 or sam_line.clip_count_back != 0:
+				print 'BLASR CIGAR contains clipping! Please revise clipped_pos! Read: "%s".' % sam_line.qname;
+
+		sam_reference = hashed_reference_sam[qname][0];
+
+		[num_correct_bases, num_mapped_bases, num_ref_bases] = CompareBasePositions(sam_line, sam_reference);
+		sum_correct_bases += num_correct_bases;
+		sum_mapped_bases += num_mapped_bases;
+		sum_ref_bases += num_ref_bases;
+
+		# Trebao bih ovdje dohvatiti broj tocno mapiranih baza, i broj baza koje ukupno postoje, i onda izracunati statistike i vratiti ih dolje!
+
+	precision = 100.0 * float(sum_correct_bases) / float(sum_mapped_bases);
+	recall = 100.0 * float(sum_correct_bases) / float(total_ref_bases);
+
+	if (out_summary_prefix != ''):
+		fp_out.write('percent_correct_m\tnum_correct_m\tnum_m_ops_in_reference\n');
+		fp_out.write('%.2f\t%.2f\t%.2f\t%.2f\n' % (precision, recall, sum_correct_bases, sum_mapped_bases));
+		fp_out.close();
+	sys.stderr.write('\n');
+
+	return [precision, recall, sum_correct_bases, sum_mapped_bases];
+
+
+
+def CountCorrectlyMappedBases2(sam_basename, hashed_sam_lines, hashed_reference_sam, out_summary_prefix='', use_strict=False):
 	fp_out = None;
 	
 	out_file = out_summary_prefix + '.csv';
@@ -756,6 +898,7 @@ def CountCorrectlyMappedBases(sam_basename, hashed_sam_lines, hashed_reference_s
 	total_num_same_i_ops_individual_m = 0;
 	total_num_same_d_ops_individual_m = 0;
 	total_num_same_other_ops_individual_m = 0;
+	query_num_m_ops_mapped_reads = 0;
 	ref_num_m_ops_mapped_reads = 0;
 	ref_num_i_ops_mapped_reads = 0;
 	ref_num_d_ops_mapped_reads = 0;
@@ -807,6 +950,7 @@ def CountCorrectlyMappedBases(sam_basename, hashed_sam_lines, hashed_reference_s
 		[num_m_ops_individual_m, num_i_ops_individual_m, num_d_ops_individual_m, num_other_ops_individual_m] = CountOperations(cigar_pos_list_individual_m);
 		[ref_num_m_ops_individual_m, ref_num_i_ops_individual_m, ref_num_d_ops_individual_m, ref_num_other_ops_individual_m] = CountOperations(reference_cigar_pos_list);
 		
+		query_num_m_ops_mapped_reads += num_m_ops_individual_m;
 		ref_num_m_ops_mapped_reads += ref_num_m_ops_individual_m;
 		ref_num_i_ops_mapped_reads += ref_num_i_ops_individual_m;
 		ref_num_d_ops_mapped_reads += ref_num_d_ops_individual_m;
@@ -825,7 +969,8 @@ def CountCorrectlyMappedBases(sam_basename, hashed_sam_lines, hashed_reference_s
 		# print num_same_m_ops_individual_m;
 		# exit(1);
 
-	precision_m = (float(total_num_same_m_ops_individual_m) / float(ref_num_m_ops_mapped_reads)) * 100.0;
+	# precision_m = (float(total_num_same_m_ops_individual_m) / float(ref_num_m_ops_mapped_reads)) * 100.0;
+	precision_m = (float(total_num_same_m_ops_individual_m) / float(query_num_m_ops_mapped_reads)) * 100.0;
 	precision_i = (float(total_num_same_i_ops_individual_m) / float(ref_num_i_ops_mapped_reads)) * 100.0;
 	precision_d = (float(total_num_same_d_ops_individual_m) / float(ref_num_d_ops_mapped_reads)) * 100.0;
 

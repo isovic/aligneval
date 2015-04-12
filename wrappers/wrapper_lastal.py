@@ -29,7 +29,7 @@ def get_sam_header(reference_file):
 	
 	i = 0;
 	while i < len(headers):
-		line += '@SQ\tSN:%s\tLN:%d\n' % (headers[i], len(seqs[i]));
+		line += '@SQ\tSN:%s\tLN:%d\n' % (headers[i].split()[0], len(seqs[i]));
 		i += 1;
 	
 	return line;

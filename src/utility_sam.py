@@ -869,6 +869,52 @@ def GetExecutionStats(sam_file):
 	
 	return ('\t' + '\n\t'.join([line.strip() for line in lines]));
 
+def ParseMemTime(sam_file):
+	memtime_path = os.path.splitext(sam_file)[0] + '.memtime';
+	fp = open(memtime_path, 'r');
+	lines = [line.strip() for line in fp.readlines() if (len(line.strip()) > 0)];
+	fp.close();
+
+	cmdline = '';
+	realtime = 0;
+	cputime = 0;
+	usertime = 0;
+	systemtime = 0;
+	maxrss = 0;
+	rsscache = 0;
+	time_unit = '';
+	mem_unit = '';
+
+	for line in lines:
+		if (line.startswith('Command line:')):
+			cmdline = line.split(':')[1].strip();
+		elif (line.startswith('Real time:')):
+			split_line = line.split(':')[1].strip().split(' ');
+			realtime = float(split_line[0].strip());
+			time_unit = split_line[1].strip();
+		elif (line.startswith('CPU time:')):
+			split_line = line.split(':')[1].strip().split(' ');
+			cputime = float(split_line[0].strip());
+			time_unit = split_line[1].strip();
+		elif (line.startswith('User time:')):
+			split_line = line.split(':')[1].strip().split(' ');
+			usertime = float(split_line[0].strip());
+			time_unit = split_line[1].strip();
+		elif (line.startswith('System time:')):
+			split_line = line.split(':')[1].strip().split(' ');
+			systemtime = float(split_line[0].strip());
+			time_unit = split_line[1].strip();
+		elif (line.startswith('Maximum RSS:')):
+			split_line = line.split(':')[1].strip().split(' ');
+			maxrss = float(split_line[0].strip());
+			mem_unit = split_line[1].strip();
+		# elif (line.startswith('')):
+		# 	split_line = line.split(':')[1].strip().split(' ');
+		# 	rsscache = float(split_line[0].strip());
+		# 	mem_unit = split_line[1].strip();
+
+	return [cmdline, realtime, cputime, usertime, systemtime, maxrss, time_unit, mem_unit];
+
 def WriteSamLines(sam_lines, output_path):
 	try:
 		fp = open(output_path, 'w');
@@ -1175,6 +1221,143 @@ def CountMappedReads(sam_file):
 	num_mapped_reads = len(highest_scoring_alignment_for_read.keys());
 
 	return [num_alignments, num_mapped_alignments, num_unique_reads, num_mapped_reads, num_mapped_bases];
+
+
+
+### Counts the number of bases mapped to the same position in both SAMLines.
+def CompareBasePositions(query_sam, ref_sam):
+	qsam_ref_coords = [None] * query_sam.CalcReadLengthFromCigar();
+	rsam_ref_coords = [None] * ref_sam.CalcReadLengthFromCigar();
+
+	num_mapped_bases = len(qsam_ref_coords) - query_sam.clip_count_front - query_sam.clip_count_back;
+	num_ref_bases = len(rsam_ref_coords) - ref_sam.clip_count_front - ref_sam.clip_count_back;
+
+	if (len(qsam_ref_coords) < len(rsam_ref_coords) or
+		query_sam.IsMapped() == False or ref_sam.IsMapped() == False or query_sam.rname != ref_sam.rname or query_sam.IsReverse() != ref_sam.IsReverse()):
+		# sys.stderr.write('Warning: Mappers output does not conform to SAM format specification! CIGAR field does not specify sequence of equal length as in the input FASTA file. Possibly hard clipping operations are missing.\n');	
+		return [0, num_mapped_bases, num_ref_bases];
+
+	# Find the positions of all the query bases.
+	query_cigpos = query_sam.CalcCigarStartingPositions(False);
+	for cigpos in query_cigpos:
+		[cig_count, cig_op, pos_on_ref, pos_on_query] = cigpos;
+		if (cig_op in 'M=X'):
+			qsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = range(pos_on_ref, (pos_on_ref + cig_count));
+		elif (cig_op == 'I'):
+			qsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = [-1]*cig_count;
+		elif (cig_op == 'S'):
+			qsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = [-3]*cig_count;
+		elif (cig_op == 'H'):
+			qsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = [-4]*cig_count;
+
+	# Find the positions of all the reference bases.
+	ref_cigpos = ref_sam.CalcCigarStartingPositions(False);
+	for cigpos in ref_cigpos:
+		[cig_count, cig_op, pos_on_ref, pos_on_query] = cigpos;
+		if (cig_op in 'M=X'):
+			rsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = range(pos_on_ref, (pos_on_ref + cig_count));
+		elif (cig_op == 'I'):
+			rsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = [-1]*cig_count;
+		elif (cig_op == 'S'):
+			rsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = [-3]*cig_count;
+		elif (cig_op == 'H'):
+			rsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = [-4]*cig_count;
+
+	# Count the number of correctly mapped bases ('M' and 'I' CIGAR operations):
+	num_correct_bases = 0;
+	i = 0;
+	while (i < len(qsam_ref_coords)):
+		# Skip the clipped bases:
+		if (qsam_ref_coords[i] != -3 and qsam_ref_coords[i]!= -4):
+			# Count the equal bases
+			if (qsam_ref_coords[i] == rsam_ref_coords[i]):
+				num_correct_bases += 1;
+			# else:
+			# 	# Just debug output.
+			# 	print 'qsam[i] = %d\trsam[i] = %d\tseq[i] = %s' % (qsam_ref_coords[i], rsam_ref_coords[i], ref_sam.seq[i]);
+		i += 1;
+
+	return [num_correct_bases, num_mapped_bases, num_ref_bases];
+
+def CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference_sam, out_summary_prefix=''):
+	# if (use_strict == False):
+	# 	return [0.0, 0.0, 0, 0];
+
+	fp_out = None;
+	out_file = out_summary_prefix + '.csv';
+	if (out_summary_prefix != ''):
+		try:
+			fp_out = open(out_file, 'w');
+		except IOError:
+			sys.stderr.write('[%s] ERROR: Could not open file "%s" for writing!\n' % (__name__, out_file));
+			exit(1);
+	sys.stderr.write('Starting to count the number of correctly mapped bases in the tested SAM file!\n');
+
+
+	total_ref_bases = 0;
+	for qname in hashed_reference_sam.keys():
+		ref_sam = hashed_reference_sam[qname][0];
+		# total_ref_bases += (ref_sam.CalcReadLengthFromCigar() - ref_sam.clip_count_front - ref_sam.clip_count_back);
+		num_ref_bases = len(ref_sam.seq);
+		# Remove the counts of soft-clipped bases from the read length. We ignore hard clipped bases, because they are
+		# not present in the SEQ field anyway.
+		num_ref_bases -= (ref_sam.clip_count_front if ref_sam.clip_op_front == 'S' else 0);
+		num_ref_bases -= (ref_sam.clip_count_back if ref_sam.clip_op_back == 'S' else 0);
+		total_ref_bases += num_ref_bases;
+
+	sum_correct_bases = 0;
+	sum_mapped_bases = 0;
+	sum_ref_bases = 0;
+
+	i = 0;
+	for qname in hashed_sam_lines.keys():
+		i += 1;
+		if ((i % 100) == 0):
+			sys.stderr.write('\rLine %d' % (i));
+			sys.stderr.flush();
+
+		sam_line = hashed_sam_lines[qname][0];
+
+		if (sam_line.IsMapped() == False):
+			continue;
+		if ((qname in hashed_reference_sam) == False):
+			sys.stderr.write('\tERROR: Reference SAM does not contain qname "%s"!\n' % (qname));
+			continue;
+
+		# TODO: THIS NEEDS TO BE REMOVED OR IMPLEMENTED SOMEHOW DIFFERENTLY!!
+		# The point of this was that, BLASR doesn't conform to the SAM standard, and makes it difficult to
+		# uniformly evaluate the results!
+		# if 'blasr' in sam_basename.lower():
+		# 	qname = '/'.join(qname.split('/')[:-1]);
+		# 	if sam_line.clip_count_front != 0 or sam_line.clip_count_back != 0:
+		# 		print 'BLASR CIGAR contains clipping! Please revise clipped_pos! Read: "%s".' % sam_line.qname;
+
+		sam_reference = hashed_reference_sam[qname][0];
+
+		[num_correct_bases, num_mapped_bases, num_ref_bases] = CompareBasePositions(sam_line, sam_reference);
+		sum_correct_bases += num_correct_bases;
+		sum_mapped_bases += num_mapped_bases;
+		sum_ref_bases += num_ref_bases;
+
+		# if (float(num_correct_bases) / float(num_mapped_bases) < 0.75):
+		# 	print 'Original line:';
+		# 	print sam_line.original_line;
+		# 	print '';
+		# 	print 'Reference SAM line:';
+		# 	print sam_reference.original_line;
+		# 	print '';
+		# 	print '';
+
+	precision = (100.0 * float(sum_correct_bases) / float(sum_mapped_bases)) if (sum_mapped_bases > 0) else 0.0;
+	recall = (100.0 * float(sum_correct_bases) / float(total_ref_bases)) if (total_ref_bases) else 0.0;
+
+	if (out_summary_prefix != ''):
+		fp_out.write('percent_correct_m\tnum_correct_m\tnum_m_ops_in_reference\n');
+		fp_out.write('%.2f\t%.2f\t%.2f\t%.2f\n' % (precision, recall, sum_correct_bases, sum_mapped_bases));
+		fp_out.close();
+	sys.stderr.write('\n');
+
+	return [precision, recall, sum_correct_bases, sum_mapped_bases, total_ref_bases];
 
 
 

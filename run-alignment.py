@@ -29,16 +29,16 @@ if __name__ == "__main__":
 	# simulated_datasets.append('Illumina-1k-single_end');								machine_names.append('illumina');
 	# simulated_datasets.append('PacBio-1k');												machine_names.append('pacbio');
 	# simulated_datasets.append('OxfordNanopore-pbsim-observed_last-2d-1k');				machine_names.append('nanopore');
-	# simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-2d-1k');			machine_names.append('nanopore');
+	simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-2d-1k');			machine_names.append('nanopore');
 	# simulated_datasets.append('OxfordNanopore-pbsim-observed_last-1d-1k');				machine_names.append('nanopore');
-	simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-1d-1k');			machine_names.append('nanopore');
+	# simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-1d-1k');			machine_names.append('nanopore');
 	# simulated_datasets.append('OxfordNanopore-pbsim-observed_marginalign-2d-1k');		machine_names.append('nanopore');
 
 	genomes = [];
-	# genomes.append('neisseria_meningitidis');
+	genomes.append('neisseria_meningitidis');
 	# genomes.append('escherichia_coli');
 	# genomes.append('saccharomyces_cerevisiae');
-	genomes.append('caenorhabditis_elegans');
+	# genomes.append('caenorhabditis_elegans');
 	# genomes.append('hg19_v38-chr3');
 
 	num_processed_datasets = 0;
@@ -66,8 +66,8 @@ if __name__ == "__main__":
 			# 	command = '%s.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);' % (wrapper_basename);
 			# 	exec(command);
 
-			# wrapper_graphmap.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
-			wrapper_lastal.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
+			wrapper_graphmap.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
+			# wrapper_lastal.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 				# wrapper_blasr.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 			wrapper_bwamem.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 			# wrapper_blast.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);

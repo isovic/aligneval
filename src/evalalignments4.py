@@ -172,7 +172,7 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 		# [percent_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops] = analyze_correctly_mapped_bases.CountCorrectlyMappedBases(sam_file, hashed_reference, '');
 		# [precision_correctly_mapped_bases, recall_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops] = CountCorrectlyMappedBases(sam_basename[0], hashed_sam_lines, hashed_reference, '', use_strict=False);
 		[precision_correctly_mapped_bases, recall_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops] = [0.0, 0.0, 0, 0];
-		[precision_correctly_mapped_bases_strict, recall_correctly_mapped_bases_strict, num_correctly_mapped_bases_strict, dataset_mapped_ref_num_m_ops_strict, num_ref_bases_strict] = utility_sam.CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference, '');
+		[precision_correctly_mapped_bases_strict, recall_correctly_mapped_bases_strict, num_correctly_mapped_bases_strict, dataset_mapped_ref_num_m_ops_strict, num_ref_bases_strict] = utility_sam.CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference, '', sam_basename=sam_basename[0]);
 		# percent_correctly_mapped_bases = 0.0;
 		# num_correctly_mapped_bases = 1;
 		# dataset_mapped_ref_num_m_ops = 2;
@@ -893,123 +893,123 @@ def CountOperations(cigar_list):
 
 
 
-def CountCorrectlyMappedBases2(sam_basename, hashed_sam_lines, hashed_reference_sam, out_summary_prefix='', use_strict=False):
-	fp_out = None;
+# def CountCorrectlyMappedBases2(sam_basename, hashed_sam_lines, hashed_reference_sam, out_summary_prefix='', use_strict=False):
+# 	fp_out = None;
 	
-	out_file = out_summary_prefix + '.csv';
+# 	out_file = out_summary_prefix + '.csv';
 	
-	if (out_summary_prefix != ''):
-		try:
-			fp_out = open(out_file, 'w');
-		except IOError:
-			sys.stderr.write('[%s] ERROR: Could not open file "%s" for writing!\n' % (__name__, out_file));
-			exit(1);
+# 	if (out_summary_prefix != ''):
+# 		try:
+# 			fp_out = open(out_file, 'w');
+# 		except IOError:
+# 			sys.stderr.write('[%s] ERROR: Could not open file "%s" for writing!\n' % (__name__, out_file));
+# 			exit(1);
 
-	sys.stderr.write('Starting to count the number of correctly mapped bases in the tested SAM file!\n');
+# 	sys.stderr.write('Starting to count the number of correctly mapped bases in the tested SAM file!\n');
 
-	total_num_same_ops_individual_m = 0;
-	total_num_same_m_ops_individual_m = 0;
-	total_num_same_i_ops_individual_m = 0;
-	total_num_same_d_ops_individual_m = 0;
-	total_num_same_other_ops_individual_m = 0;
-	query_num_m_ops_mapped_reads = 0;
-	ref_num_m_ops_mapped_reads = 0;
-	ref_num_i_ops_mapped_reads = 0;
-	ref_num_d_ops_mapped_reads = 0;
-	dataset_total_ref_num_other_ops = 0;
+# 	total_num_same_ops_individual_m = 0;
+# 	total_num_same_m_ops_individual_m = 0;
+# 	total_num_same_i_ops_individual_m = 0;
+# 	total_num_same_d_ops_individual_m = 0;
+# 	total_num_same_other_ops_individual_m = 0;
+# 	query_num_m_ops_mapped_reads = 0;
+# 	ref_num_m_ops_mapped_reads = 0;
+# 	ref_num_i_ops_mapped_reads = 0;
+# 	ref_num_d_ops_mapped_reads = 0;
+# 	dataset_total_ref_num_other_ops = 0;
 
-	ref_num_m_ops_all_reads = 0;
-	ref_num_i_ops_all_reads = 0;
-	ref_num_d_ops_all_reads = 0;
+# 	ref_num_m_ops_all_reads = 0;
+# 	ref_num_i_ops_all_reads = 0;
+# 	ref_num_d_ops_all_reads = 0;
 
-	reference_cigar_pos_list_individual_m = {};
-	for qname in hashed_reference_sam.keys():
-		sam_reference = hashed_reference_sam[qname][0];
-		cigar_pos_list = sam_reference.CalcCigarStartingPositions(True);
-		reference_cigar_pos_list_individual_m[qname] = cigar_pos_list;
-		[ref_num_m_ops_individual_m, ref_num_i_ops_individual_m, ref_num_d_ops_individual_m, ref_num_other_ops_individual_m] = CountOperations(cigar_pos_list);
-		ref_num_m_ops_all_reads += ref_num_m_ops_individual_m;
-		ref_num_i_ops_all_reads += ref_num_i_ops_individual_m;
-		ref_num_d_ops_all_reads += ref_num_d_ops_individual_m;
+# 	reference_cigar_pos_list_individual_m = {};
+# 	for qname in hashed_reference_sam.keys():
+# 		sam_reference = hashed_reference_sam[qname][0];
+# 		cigar_pos_list = sam_reference.CalcCigarStartingPositions(True);
+# 		reference_cigar_pos_list_individual_m[qname] = cigar_pos_list;
+# 		[ref_num_m_ops_individual_m, ref_num_i_ops_individual_m, ref_num_d_ops_individual_m, ref_num_other_ops_individual_m] = CountOperations(cigar_pos_list);
+# 		ref_num_m_ops_all_reads += ref_num_m_ops_individual_m;
+# 		ref_num_i_ops_all_reads += ref_num_i_ops_individual_m;
+# 		ref_num_d_ops_all_reads += ref_num_d_ops_individual_m;
 
-	i = 0;
-	for qname in hashed_sam_lines.keys():
-		i += 1;
-		if ((i % 100) == 0):
-			sys.stderr.write('\rLine %d' % (i));
-			sys.stderr.flush();
+# 	i = 0;
+# 	for qname in hashed_sam_lines.keys():
+# 		i += 1;
+# 		if ((i % 100) == 0):
+# 			sys.stderr.write('\rLine %d' % (i));
+# 			sys.stderr.flush();
 
-		sam_line = hashed_sam_lines[qname][0];
+# 		sam_line = hashed_sam_lines[qname][0];
 
-		if (sam_line.IsMapped() == False):
-			continue;
-		if ((qname in hashed_sam_lines) == False):
-			sys.stderr.write('\tERROR: Reference SAM does not contain qname "%s"!\n' % (qname));
-			continue;
+# 		if (sam_line.IsMapped() == False):
+# 			continue;
+# 		if ((qname in hashed_sam_lines) == False):
+# 			sys.stderr.write('\tERROR: Reference SAM does not contain qname "%s"!\n' % (qname));
+# 			continue;
 
-		# TODO: THIS NEEDS TO BE REMOVED OR IMPLEMENTED SOMEHOW DIFFERENTLY!!
-		# The point of this was that, BLASR doesn't conform to the SAM standard, and makes it difficult to
-		# uniformly evaluate the results!
-		if 'blasr' in sam_basename.lower():
-			qname = '/'.join(qname.split('/')[:-1]);
-			if sam_line.clip_count_front != 0 or sam_line.clip_count_back != 0:
-				print 'BLASR CIGAR contains clipping! Please revise clipped_pos! Read: "%s".' % sam_line.qname;
+# 		# TODO: THIS NEEDS TO BE REMOVED OR IMPLEMENTED SOMEHOW DIFFERENTLY!!
+# 		# The point of this was that, BLASR doesn't conform to the SAM standard, and makes it difficult to
+# 		# uniformly evaluate the results!
+# 		if 'blasr' in sam_basename.lower():
+# 			qname = '/'.join(qname.split('/')[:-1]);
+# 			if sam_line.clip_count_front != 0 or sam_line.clip_count_back != 0:
+# 				print 'BLASR CIGAR contains clipping! Please revise clipped_pos! Read: "%s".' % sam_line.qname;
 
-		sam_reference = hashed_reference_sam[qname][0];
+# 		sam_reference = hashed_reference_sam[qname][0];
 
-		cigar_pos_list_individual_m = sam_line.CalcCigarStartingPositions(True);
-		# reference_cigar_pos_list_individual_m = sam_reference.CalcCigarStartingPositions(True);
-		reference_cigar_pos_list = reference_cigar_pos_list_individual_m[qname];
+# 		cigar_pos_list_individual_m = sam_line.CalcCigarStartingPositions(True);
+# 		# reference_cigar_pos_list_individual_m = sam_reference.CalcCigarStartingPositions(True);
+# 		reference_cigar_pos_list = reference_cigar_pos_list_individual_m[qname];
 		
-		[num_m_ops_individual_m, num_i_ops_individual_m, num_d_ops_individual_m, num_other_ops_individual_m] = CountOperations(cigar_pos_list_individual_m);
-		[ref_num_m_ops_individual_m, ref_num_i_ops_individual_m, ref_num_d_ops_individual_m, ref_num_other_ops_individual_m] = CountOperations(reference_cigar_pos_list);
+# 		[num_m_ops_individual_m, num_i_ops_individual_m, num_d_ops_individual_m, num_other_ops_individual_m] = CountOperations(cigar_pos_list_individual_m);
+# 		[ref_num_m_ops_individual_m, ref_num_i_ops_individual_m, ref_num_d_ops_individual_m, ref_num_other_ops_individual_m] = CountOperations(reference_cigar_pos_list);
 		
-		query_num_m_ops_mapped_reads += num_m_ops_individual_m;
-		ref_num_m_ops_mapped_reads += ref_num_m_ops_individual_m;
-		ref_num_i_ops_mapped_reads += ref_num_i_ops_individual_m;
-		ref_num_d_ops_mapped_reads += ref_num_d_ops_individual_m;
-		dataset_total_ref_num_other_ops += ref_num_other_ops_individual_m;
+# 		query_num_m_ops_mapped_reads += num_m_ops_individual_m;
+# 		ref_num_m_ops_mapped_reads += ref_num_m_ops_individual_m;
+# 		ref_num_i_ops_mapped_reads += ref_num_i_ops_individual_m;
+# 		ref_num_d_ops_mapped_reads += ref_num_d_ops_individual_m;
+# 		dataset_total_ref_num_other_ops += ref_num_other_ops_individual_m;
 
-		if (use_strict == False):
-			[num_same_ops_individual_m, num_same_m_ops_individual_m, num_same_i_ops_individual_m, num_same_d_ops_individual_m, num_same_other_ops_individual_m] = CountSameCigarOps(cigar_pos_list_individual_m, reference_cigar_pos_list);
-		else:
-			[num_same_ops_individual_m, num_same_m_ops_individual_m, num_same_i_ops_individual_m, num_same_d_ops_individual_m, num_same_other_ops_individual_m] = CountSameCigarOpsStrict(cigar_pos_list_individual_m, reference_cigar_pos_list);
-		total_num_same_ops_individual_m += num_same_ops_individual_m;
-		total_num_same_m_ops_individual_m += num_same_m_ops_individual_m;
-		total_num_same_i_ops_individual_m += num_same_i_ops_individual_m;
-		total_num_same_d_ops_individual_m += num_same_d_ops_individual_m;
-		total_num_same_other_ops_individual_m += num_same_other_ops_individual_m;
-		sam_line.num_correct_m_ops = num_same_m_ops_individual_m;
-		# print num_same_m_ops_individual_m;
-		# exit(1);
+# 		if (use_strict == False):
+# 			[num_same_ops_individual_m, num_same_m_ops_individual_m, num_same_i_ops_individual_m, num_same_d_ops_individual_m, num_same_other_ops_individual_m] = CountSameCigarOps(cigar_pos_list_individual_m, reference_cigar_pos_list);
+# 		else:
+# 			[num_same_ops_individual_m, num_same_m_ops_individual_m, num_same_i_ops_individual_m, num_same_d_ops_individual_m, num_same_other_ops_individual_m] = CountSameCigarOpsStrict(cigar_pos_list_individual_m, reference_cigar_pos_list);
+# 		total_num_same_ops_individual_m += num_same_ops_individual_m;
+# 		total_num_same_m_ops_individual_m += num_same_m_ops_individual_m;
+# 		total_num_same_i_ops_individual_m += num_same_i_ops_individual_m;
+# 		total_num_same_d_ops_individual_m += num_same_d_ops_individual_m;
+# 		total_num_same_other_ops_individual_m += num_same_other_ops_individual_m;
+# 		sam_line.num_correct_m_ops = num_same_m_ops_individual_m;
+# 		# print num_same_m_ops_individual_m;
+# 		# exit(1);
 
-	# precision_m = (float(total_num_same_m_ops_individual_m) / float(ref_num_m_ops_mapped_reads)) * 100.0;
-	precision_m = (float(total_num_same_m_ops_individual_m) / float(query_num_m_ops_mapped_reads)) * 100.0;
-	precision_i = (float(total_num_same_i_ops_individual_m) / float(ref_num_i_ops_mapped_reads)) * 100.0;
-	precision_d = (float(total_num_same_d_ops_individual_m) / float(ref_num_d_ops_mapped_reads)) * 100.0;
+# 	# precision_m = (float(total_num_same_m_ops_individual_m) / float(ref_num_m_ops_mapped_reads)) * 100.0;
+# 	precision_m = (float(total_num_same_m_ops_individual_m) / float(query_num_m_ops_mapped_reads)) * 100.0;
+# 	precision_i = (float(total_num_same_i_ops_individual_m) / float(ref_num_i_ops_mapped_reads)) * 100.0;
+# 	precision_d = (float(total_num_same_d_ops_individual_m) / float(ref_num_d_ops_mapped_reads)) * 100.0;
 
-	recall_m = (float(total_num_same_m_ops_individual_m) / float(ref_num_m_ops_all_reads)) * 100.0;
-	recall_i = (float(total_num_same_i_ops_individual_m) / float(ref_num_i_ops_all_reads)) * 100.0;
-	recall_d = (float(total_num_same_d_ops_individual_m) / float(ref_num_d_ops_all_reads)) * 100.0;
+# 	recall_m = (float(total_num_same_m_ops_individual_m) / float(ref_num_m_ops_all_reads)) * 100.0;
+# 	recall_i = (float(total_num_same_i_ops_individual_m) / float(ref_num_i_ops_all_reads)) * 100.0;
+# 	recall_d = (float(total_num_same_d_ops_individual_m) / float(ref_num_d_ops_all_reads)) * 100.0;
 
-	# if (('LAST' in sam_basename.upper()) == True and precision_m < 95.0):
-	# 	print 'Tu sam!!!';
-	# 	print sam_basename;
-	# 	print 'total_num_same_m_ops_individual_m = %d' % total_num_same_m_ops_individual_m;
-	# 	print 'ref_num_m_ops_mapped_reads = %d' % ref_num_m_ops_mapped_reads;
-	# 	print '';
-	# 	print '';
-	# 	print '';
+# 	# if (('LAST' in sam_basename.upper()) == True and precision_m < 95.0):
+# 	# 	print 'Tu sam!!!';
+# 	# 	print sam_basename;
+# 	# 	print 'total_num_same_m_ops_individual_m = %d' % total_num_same_m_ops_individual_m;
+# 	# 	print 'ref_num_m_ops_mapped_reads = %d' % ref_num_m_ops_mapped_reads;
+# 	# 	print '';
+# 	# 	print '';
+# 	# 	print '';
 
-	if (out_summary_prefix != ''):
-		fp_out.write('percent_correct_m\tnum_correct_m\tnum_m_ops_in_reference\n');
-		fp_out.write('%.2f\t%.2f\t%.2f\t%.2f\n' % (precision_m, recall_m, total_num_same_m_ops_individual_m, ref_num_m_ops_mapped_reads));
-		fp_out.close();
+# 	if (out_summary_prefix != ''):
+# 		fp_out.write('percent_correct_m\tnum_correct_m\tnum_m_ops_in_reference\n');
+# 		fp_out.write('%.2f\t%.2f\t%.2f\t%.2f\n' % (precision_m, recall_m, total_num_same_m_ops_individual_m, ref_num_m_ops_mapped_reads));
+# 		fp_out.close();
 	
-	sys.stderr.write('\n');
+# 	sys.stderr.write('\n');
 
-	return [precision_m, recall_m, total_num_same_m_ops_individual_m, ref_num_m_ops_mapped_reads, ref_num_m_ops_all_reads];
-	
+# 	return [precision_m, recall_m, total_num_same_m_ops_individual_m, ref_num_m_ops_mapped_reads, ref_num_m_ops_all_reads];
+
 
 
 def CalculateStats(num_unique_references, sam_lines, sam_basename, sam_execution_stats, sam_modified_time, intermediate_results_path=''):

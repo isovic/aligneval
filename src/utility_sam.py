@@ -1279,7 +1279,7 @@ def CompareBasePositions(query_sam, ref_sam):
 
 	return [num_correct_bases, num_mapped_bases, num_ref_bases];
 
-def CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference_sam, out_summary_prefix=''):
+def CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference_sam, out_summary_prefix='', sam_basename=''):
 	# if (use_strict == False):
 	# 	return [0.0, 0.0, 0, 0];
 
@@ -1318,19 +1318,19 @@ def CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference_sam, out_summar
 
 		sam_line = hashed_sam_lines[qname][0];
 
+		# TODO: THIS NEEDS TO BE REMOVED OR IMPLEMENTED SOMEHOW DIFFERENTLY!!
+		# The point of this was that, BLASR doesn't conform to the SAM standard, and makes it difficult to
+		# uniformly evaluate the results!
+		if 'blasr' in sam_basename.lower():
+			qname = '/'.join(qname.split('/')[:-1]);
+			if sam_line.clip_count_front != 0 or sam_line.clip_count_back != 0:
+				print 'BLASR CIGAR contains clipping! Please revise clipped_pos! Read: "%s".' % sam_line.qname;
+
 		if (sam_line.IsMapped() == False):
 			continue;
 		if ((qname in hashed_reference_sam) == False):
 			sys.stderr.write('\tERROR: Reference SAM does not contain qname "%s"!\n' % (qname));
 			continue;
-
-		# TODO: THIS NEEDS TO BE REMOVED OR IMPLEMENTED SOMEHOW DIFFERENTLY!!
-		# The point of this was that, BLASR doesn't conform to the SAM standard, and makes it difficult to
-		# uniformly evaluate the results!
-		# if 'blasr' in sam_basename.lower():
-		# 	qname = '/'.join(qname.split('/')[:-1]);
-		# 	if sam_line.clip_count_front != 0 or sam_line.clip_count_back != 0:
-		# 		print 'BLASR CIGAR contains clipping! Please revise clipped_pos! Read: "%s".' % sam_line.qname;
 
 		sam_reference = hashed_reference_sam[qname][0];
 

@@ -45,6 +45,10 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 		# parameters = '-x nanopore -v 5 -b 4 -B 0';
 		parameters = '-v 5 -t %d -B 0 -b 3' % num_threads;
 
+	elif ((machine_name.lower() == 'nanoporecirc')):
+		# parameters = '-x nanopore -v 5 -b 4 -B 0';
+		parameters = '-v 5 -t %d -C -B 0 -b 3' % num_threads;
+
 	elif ((machine_name.lower() == 'debug')):
 		# parameters = '-x nanopore -v 5 -C -B 0 -j 11 -v 7 -y 31676 -n 1 -t 1';
 		parameters = '-B 0 -b 3 -F 0.05 -l 9 -A 12 -v 7 -y 31676 -n 1 -t 1';

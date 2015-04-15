@@ -357,7 +357,13 @@ class SAMLine:
 	# Although this reflects on the seq length, if seq is hard clipped, this does
 	# not report the length of the entire sequence (read) if it were unclipped.
 	# For this purpose, check CalcReadLengthFromCigar function.
-	def CalcAlignmentLengthFromCigar(self):
+	# Edit: 14.04.2015. Added new parameter: switch_ins_and_dels.
+	# It seems that PBSim reports the variations that it induced in the reference
+	# instead of reporting the variations from the read's perspective. In other words,
+	# when a PBSim's CIGAR has an insertion, that is an insertion to the reference and
+	# not the read (vice versa goes for the deletions). Normally, CIGAR is reported
+	# from the read's point of view.
+	def CalcAlignmentLengthFromCigar(self, switch_ins_and_dels=False):
 		split_cigar = self.SplitCigar();
 		alignment_length = 0;
 		i = 0;
@@ -366,7 +372,10 @@ class SAMLine:
 			cigar_op = split_cigar[i][1];
 			# From the SAM format specification:
 			#     Sum of lengths of the M/I/S/=/X operations shall equal the length of SEQ.
-			if (cigar_op in 'MIS=X'):
+			# if ((switch_ins_and_dels == False and (cigar_op in 'MIS=X')) or
+			# 	(switch_ins_and_dels == True and (cigar_op in 'MDS=X'))):
+			if ((switch_ins_and_dels == False and (cigar_op in 'MDS=X')) or
+				(switch_ins_and_dels == True and (cigar_op in 'MIS=X'))):
 				alignment_length += cigar_count;
 			i += 1;
 		return alignment_length;
@@ -375,7 +384,7 @@ class SAMLine:
 	# length of the entire read. Unlike CalcAlignmentLengthFromCigar, the value returned
 	# by this function may be greater or equal to the length of seq, because seq can be
 	# hard clipped.
-	def CalcReadLengthFromCigar(self):
+	def CalcReadLengthFromCigar(self, switch_ins_and_dels=False):
 		split_cigar = self.SplitCigar();
 		alignment_length = 0;
 		i = 0;
@@ -384,14 +393,16 @@ class SAMLine:
 			cigar_op = split_cigar[i][1];
 			# From the SAM format specification:
 			#     Sum of lengths of the M/I/S/=/X operations shall equal the length of SEQ.
-			if (cigar_op in 'MISH=X'):
+			# if (cigar_op in 'MISH=X'):
+			if ((switch_ins_and_dels == False and (cigar_op in 'MISH=X')) or
+				(switch_ins_and_dels == True and (cigar_op in 'MDSH=X'))):
 				alignment_length += cigar_count;
 			i += 1;
 		return alignment_length;
 
 	# Sums the counts of M/D/=/X operations in the CIGAR string to determine the
 	# length of the reference covered by the read.
-	def CalcReferenceLengthFromCigar(self):
+	def CalcReferenceLengthFromCigar(self, switch_ins_and_dels=False):
 		split_cigar = self.SplitCigar();
 		alignment_length = 0;
 		i = 0;
@@ -400,7 +411,9 @@ class SAMLine:
 			cigar_op = split_cigar[i][1];
 			# From the SAM format specification:
 			#     Sum of lengths of the M/I/S/=/X operations shall equal the length of SEQ.
-			if (cigar_op in 'MD=X'):
+			# if (cigar_op in 'MD=X'):
+			if ((switch_ins_and_dels == False and (cigar_op in 'MD=X')) or
+				(switch_ins_and_dels == True and (cigar_op in 'MI=X'))):
 				alignment_length += cigar_count;
 			i += 1;
 		return alignment_length;
@@ -449,7 +462,7 @@ class SAMLine:
 	#	cigar_pos_list = sam_line.CalcCigarStartingPositions();
 	#	print cigar_pos_list;
 	
-	def CalcCigarStartingPositions(self, separate_matches_in_individual_bases=False):
+	def CalcCigarStartingPositions(self, separate_matches_in_individual_bases=False, switch_ins_and_dels=False):
 		#cigar_list = self.SplitCigar();
 		cigar_list = self.SplitCigarInBasicFormat();
 		cigar_pos_list = [];
@@ -474,9 +487,9 @@ class SAMLine:
 				if (cigar_op in 'MSH=X'):
 					pos_on_reference += cigar_count;
 					pos_on_read += cigar_count;
-				elif (cigar_op == 'D'):
+				elif ((switch_ins_and_dels == False and cigar_op == 'D') or  (switch_ins_and_dels == True and cigar_op == 'I')):
 					pos_on_reference += cigar_count;
-				elif (cigar_op == 'I'):
+				elif ((switch_ins_and_dels == False and cigar_op == 'I') or  (switch_ins_and_dels == True and cigar_op == 'D')):
 					pos_on_read += cigar_count;
 					
 			else:
@@ -485,9 +498,9 @@ class SAMLine:
 					if (cigar_op in 'SH'):
 						pos_on_reference += cigar_count;
 						pos_on_read += cigar_count;
-					elif (cigar_op == 'D'):
+					elif ((switch_ins_and_dels == False and cigar_op == 'D') or  (switch_ins_and_dels == True and cigar_op == 'I')):
 						pos_on_reference += cigar_count;
-					elif (cigar_op == 'I'):
+					elif ((switch_ins_and_dels == False and cigar_op == 'I') or  (switch_ins_and_dels == True and cigar_op == 'D')):
 						pos_on_read += cigar_count;
 				else:
 					j = 0;
@@ -1225,7 +1238,7 @@ def CountMappedReads(sam_file):
 
 
 ### Counts the number of bases mapped to the same position in both SAMLines.
-def CompareBasePositions(query_sam, ref_sam):
+def CompareBasePositions(query_sam, ref_sam, switch_ins_and_dels=False):
 	qsam_ref_coords = [None] * query_sam.CalcReadLengthFromCigar();
 	rsam_ref_coords = [None] * ref_sam.CalcReadLengthFromCigar();
 
@@ -1251,12 +1264,12 @@ def CompareBasePositions(query_sam, ref_sam):
 			qsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = [-4]*cig_count;
 
 	# Find the positions of all the reference bases.
-	ref_cigpos = ref_sam.CalcCigarStartingPositions(False);
+	ref_cigpos = ref_sam.CalcCigarStartingPositions(False, switch_ins_and_dels);
 	for cigpos in ref_cigpos:
 		[cig_count, cig_op, pos_on_ref, pos_on_query] = cigpos;
 		if (cig_op in 'M=X'):
 			rsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = range(pos_on_ref, (pos_on_ref + cig_count));
-		elif (cig_op == 'I'):
+		elif ((switch_ins_and_dels == False and cig_op == 'I') or (switch_ins_and_dels == True and cig_op == 'D')):
 			rsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = [-1]*cig_count;
 		elif (cig_op == 'S'):
 			rsam_ref_coords[pos_on_query:(pos_on_query + cig_count)] = [-3]*cig_count;
@@ -1279,7 +1292,7 @@ def CompareBasePositions(query_sam, ref_sam):
 
 	return [num_correct_bases, num_mapped_bases, num_ref_bases];
 
-def CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference_sam, out_summary_prefix='', sam_basename=''):
+def CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference_sam, out_summary_prefix='', sam_basename='', switch_ins_and_dels=False):
 	# if (use_strict == False):
 	# 	return [0.0, 0.0, 0, 0];
 
@@ -1334,7 +1347,7 @@ def CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference_sam, out_summar
 
 		sam_reference = hashed_reference_sam[qname][0];
 
-		[num_correct_bases, num_mapped_bases, num_ref_bases] = CompareBasePositions(sam_line, sam_reference);
+		[num_correct_bases, num_mapped_bases, num_ref_bases] = CompareBasePositions(sam_line, sam_reference, switch_ins_and_dels);
 		sum_correct_bases += num_correct_bases;
 		sum_mapped_bases += num_mapped_bases;
 		sum_ref_bases += num_ref_bases;

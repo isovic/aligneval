@@ -45,7 +45,7 @@ def register_scores(simulated_dataset, reference_name, eval_scores, eval_scores_
 			if ((evaluated_mapper in ret_results_table) == False):
 				ret_results_table[evaluated_mapper] = ['-'] * (len(ret_results_dataset_header) - 2);
 			eval_score = eval_scores[evaluated_mapper];
-			ret_results_table[evaluated_mapper].append('%.2f / %.2f' % (eval_score[eval_scores_index][1], eval_score[eval_scores_index][2]));
+			ret_results_table[evaluated_mapper].append('%.1f / %.1f' % (eval_score[eval_scores_index][1], eval_score[eval_scores_index][2]));
 		# Check if there were mappers in other datasets which were not evaluated on this dataset, and fill the current row with '-' characters.
 		for previously_evaluated_mapper in sorted(ret_results_table.keys()):
 			if ((previously_evaluated_mapper in eval_scores.keys()) == False):
@@ -65,7 +65,7 @@ def register_memtime(simulated_dataset, reference_name, eval_scores, eval_scores
 			if ((evaluated_mapper in ret_results_table) == False):
 				ret_results_table[evaluated_mapper] = ['-'] * (len(ret_results_dataset_header) - 2);
 			eval_score = eval_scores[evaluated_mapper];
-			ret_results_table[evaluated_mapper].append('%.2f' % (eval_score[eval_scores_index][2]));
+			ret_results_table[evaluated_mapper].append('%.1f' % (eval_score[eval_scores_index][2]));
 		# Check if there were mappers in other datasets which were not evaluated on this dataset, and fill the current row with '-' characters.
 		for previously_evaluated_mapper in sorted(ret_results_table.keys()):
 			if ((previously_evaluated_mapper in eval_scores.keys()) == False):

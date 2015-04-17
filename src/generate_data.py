@@ -668,7 +668,7 @@ def GeneratePacBioData(num_reads_to_generate=-1):
 	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'hg19_v38-chr3', fold_coverage=coverage_hg19v38chr3, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	##############################
 
-def GenerateOxfordNanoporeData(num_reads_to_generate=-1):
+def GenerateOxfordNanoporeDataObserved(num_reads_to_generate=-1):
 	##### OXFORD NANOPORE DATA #####
 	# --difference-ratio   ratio of differences. substitution:insertion:deletion.
 
@@ -677,7 +677,10 @@ def GenerateOxfordNanoporeData(num_reads_to_generate=-1):
 	GenerateOxfordNanoporeFromObservedStatistics('saccharomyces_cerevisiae', num_reads_to_generate=num_reads_to_generate);
 	GenerateOxfordNanoporeFromObservedStatistics('caenorhabditis_elegans', num_reads_to_generate=num_reads_to_generate);
 	GenerateOxfordNanoporeFromObservedStatistics('hg19_v38-chr3', num_reads_to_generate=num_reads_to_generate);
-	
+
+def GenerateOxfordNanoporeDataMarginAlign(num_reads_to_generate=-1):
+	##### OXFORD NANOPORE DATA #####
+	# --difference-ratio   ratio of differences. substitution:insertion:deletion.	
 	GenerateOxfordNanopore2dFromReportedStatistics('neisseria_meningitidis', num_reads_to_generate=num_reads_to_generate);
 	GenerateOxfordNanopore2dFromReportedStatistics('escherichia_coli', num_reads_to_generate=num_reads_to_generate);
 	GenerateOxfordNanopore2dFromReportedStatistics('saccharomyces_cerevisiae', num_reads_to_generate=num_reads_to_generate);
@@ -690,9 +693,12 @@ def GenerateAll():
 	num_reads_to_generate = 10000;
 	num_reads_to_generate = 1000;
 
-	GenerateNGSData(num_reads_to_generate);
-	GeneratePacBioData(num_reads_to_generate);
-	GenerateOxfordNanoporeData(num_reads_to_generate);
+	# GenerateNGSData(num_reads_to_generate);
+	# GeneratePacBioData(num_reads_to_generate);
+	# GenerateOxfordNanoporeDataObserved(num_reads_to_generate);
+
+	num_reads_to_generate = 1;
+	GenerateOxfordNanoporeDataMarginAlign(num_reads_to_generate);
 
 
 

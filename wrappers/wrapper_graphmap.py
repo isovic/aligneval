@@ -35,7 +35,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 
 	if ((machine_name.lower() == 'illumina') or (machine_name.lower() == 'roche')):
 		# parameters = '-x illumina -v 5 -b 4 -B 0';
-		parameters = '-v 5 -t %d -B 0 -b 3' % num_threads;
+		parameters = '-x illumina -v 5 -t %d -B 0 -b 3' % num_threads;
 
 	elif ((machine_name.lower() == 'pacbio')):
 		# parameters = '-v 5 -b 4 -B 0';

@@ -698,7 +698,8 @@ def GenerateAll():
 	# GenerateOxfordNanoporeDataObserved(num_reads_to_generate);
 
 	num_reads_to_generate = 1;
-	GenerateOxfordNanoporeDataMarginAlign(num_reads_to_generate);
+	# GenerateOxfordNanoporeDataMarginAlign(num_reads_to_generate);
+	GenerateNGSData(num_reads_to_generate);
 
 
 

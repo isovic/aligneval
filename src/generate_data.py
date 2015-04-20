@@ -699,7 +699,13 @@ def GenerateAll():
 
 	num_reads_to_generate = 1;
 	# GenerateOxfordNanoporeDataMarginAlign(num_reads_to_generate);
-	GenerateNGSData(num_reads_to_generate);
+	# GenerateNGSData(num_reads_to_generate);
+
+	coverage = 60;
+	machine_suffix = '-cov60';
+	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, genome_filename, fold_coverage=coverage, length_mean=4400, length_sd=3900, length_min=50, length_max=100000,
+																accuracy_mean=(1.0 - 0.41), accuracy_sd=0.05, accuracy_min=(1.0 - 0.60), difference_ratio='51:11:38',
+																machine_name='OxfordNanopore-pbsim-observed_last-1d' + machine_suffix, num_reads_to_generate=-1);
 
 
 

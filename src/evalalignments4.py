@@ -52,7 +52,7 @@ def EvaluateAlignmentsFromPath(alignments_path, sam_suffix='', bp_dists=[10]):
 ### Example usage:
 # EvaluateAlignments('reads-simulated/reads.sam', ['alignment/alignments.sam'], 'simulated_nanopore/escherichia_coli', 'alignments/');
 
-def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder, force_rerun=False, sam_suffix='', verbose_level=0, plot_results=False, bp_dists=[10]):
+def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder, force_rerun=False, sam_suffix='', verbose_level=0, plot_results=False, bp_dists=[10], count_correct_bases=True):
 	filter_reads_with_multiple_alignments = False;
 	reference_sequence_file = SCRIPT_PATH + '/../' + REFERENCE_GENOMES_ROOT + '/' + os.path.basename(dataset_name) + '.fa';
 	
@@ -175,7 +175,9 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 		# [percent_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops] = analyze_correctly_mapped_bases.CountCorrectlyMappedBases(sam_file, hashed_reference, '');
 		# [precision_correctly_mapped_bases, recall_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops] = CountCorrectlyMappedBases(sam_basename[0], hashed_sam_lines, hashed_reference, '', use_strict=False);
 		[precision_correctly_mapped_bases, recall_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops] = [0.0, 0.0, 0, 0];
-		[precision_correctly_mapped_bases_strict, recall_correctly_mapped_bases_strict, num_correctly_mapped_bases_strict, dataset_mapped_ref_num_m_ops_strict, num_ref_bases_strict] = utility_sam.CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference, '', sam_basename=sam_basename[0]);
+		[precision_correctly_mapped_bases_strict, recall_correctly_mapped_bases_strict, num_correctly_mapped_bases_strict, dataset_mapped_ref_num_m_ops_strict, num_ref_bases_strict] = [0.0, 0.0, 0, 0, 0];
+		if (count_correct_bases == True):
+			[precision_correctly_mapped_bases_strict, recall_correctly_mapped_bases_strict, num_correctly_mapped_bases_strict, dataset_mapped_ref_num_m_ops_strict, num_ref_bases_strict] = utility_sam.CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference, '', sam_basename=sam_basename[0]);
 		# percent_correctly_mapped_bases = 0.0;
 		# num_correctly_mapped_bases = 1;
 		# dataset_mapped_ref_num_m_ops = 2;
@@ -1519,27 +1521,30 @@ def verbose_usage_and_exit():
 	sys.stderr.write('Compares two sam files and compares alignment positions and accuracy of mapped bases.\n');
 	sys.stderr.write('\n');
 	sys.stderr.write('Usage:\n');
-	sys.stderr.write('\t%s <alignments.sam> <reference.sam> [<output_path>]' % sys.argv[0]);
+	sys.stderr.write('\t%s <alignments.sam> <reference.sam> count_bases [<output_path>]' % sys.argv[0]);
+	sys.stderr.write('\n');
+	sys.stderr.write('\tcount_bases - Can be "true" or "false". If true, base alignment accuracy will be performed as well (time consuming).\n');
 	sys.stderr.write('\n');
 
 	exit(0);
 
 def main():
-	if (len(sys.argv) < 3 or len(sys.argv) > 4):
+	if (len(sys.argv) < 4 or len(sys.argv) > 5):
 		verbose_usage_and_exit();
 
 	sam_file = sys.argv[1];
 	reference_sam = sys.argv[2];
+	count_correct_bases = True if (sys.argv[3].lower() == 'true') else False;
 	output_path = os.path.dirname(sam_file);
-	if (len(sys.argv) == 4):
-		output_path = sys.argv[3];
+	if (len(sys.argv) == 5):
+		output_path = sys.argv[4];
 
 	timestamp = time.strftime("%Y_%m_%d/%H%M%S");
 
 	if (len(output_path) == 0):
 		output_path = './';
 
-	EvaluateAlignments(reference_sam, [sam_file], timestamp, output_path);
+	EvaluateAlignments(reference_sam, [sam_file], timestamp, output_path, count_correct_bases=count_correct_bases);
 
 
 

@@ -1426,7 +1426,7 @@ def CompareBasePositionsAtPositions(query_sam, ref_sam, base_counts):
 			else:
 				base_counts[pos_on_ref].append('0');
 
-def CountCorrectlyMappedBasesAtPositions(hashed_sam_lines, hashed_reference_sam, positions_on_reference, out_summary_prefix='', sam_basename='', switch_ins_and_dels=False):
+def CountCorrectlyMappedBasesAtPositions(hashed_sam_lines, hashed_reference_sam, positions_on_reference, bases_on_reference, out_summary_prefix='', sam_basename='', switch_ins_and_dels=False):
 	fp_out = None;
 	out_file = out_summary_prefix + '.csv';
 	if (out_summary_prefix != ''):
@@ -1438,14 +1438,20 @@ def CountCorrectlyMappedBasesAtPositions(hashed_sam_lines, hashed_reference_sam,
 	sys.stderr.write('Starting to count the number of correctly mapped bases in the tested SAM file!\n');
 
 	base_counts = {};
-	for position in positions_on_reference:
+	bases = {};
+	i = 0;
+	while (i < len(positions_on_reference)):
+		position = positions_on_reference[i];
+		base = bases_on_reference[i];
 		base_counts[position] = [];
+		bases[position] = base;
+		i += 1;
 
 	i = 0;
 	for qname in hashed_sam_lines.keys():
 		i += 1;
 		# if ((i % 100) == 0):
-		sys.stderr.write('\rLine %d' % (i));
+		sys.stderr.write('\rLine %d/%d' % (i, len(hashed_sam_lines.keys())));
 		sys.stderr.flush();
 
 		sam_line = hashed_sam_lines[qname][0];
@@ -1469,7 +1475,9 @@ def CountCorrectlyMappedBasesAtPositions(hashed_sam_lines, hashed_reference_sam,
 		CompareBasePositionsAtPositions(sam_line, sam_reference, base_counts);
 
 	average_accuracy = 0.0;
+	average_accuracy_called_bases = 0.0;
 
+	num_called_bases = 0;
 	for mapped_bases in base_counts.values():
 		correct_bases = 0;
 		wrong_bases = 0;
@@ -1478,25 +1486,31 @@ def CountCorrectlyMappedBasesAtPositions(hashed_sam_lines, hashed_reference_sam,
 				wrong_bases += 1;
 			else:
 				correct_bases += 1;
-		accuracy = float(correct_bases) / float(len(mapped_bases));
+		accuracy = 0.0 if (len(mapped_bases) == 0) else float(correct_bases) / float(len(mapped_bases));
 		average_accuracy += accuracy;
+		average_accuracy_called_bases += accuracy;
+		num_called_bases += 1 if (len(mapped_bases) > 0) else 0;
 
 	if (len(base_counts.keys()) != 0):
 		average_accuracy /= float(len(base_counts.keys()));
+	if (num_called_bases != 0):
+		average_accuracy_called_bases /= float(num_called_bases);
 
 	average_accuracy *= 100.0;
+	average_accuracy_called_bases *= 100;
 
 	if (out_summary_prefix != ''):
+		fp_out.write('position\tref_base\taligned_bases\n');
 		for pos_on_ref in base_counts.keys():
-			fp_out.write('%d\t%s\n' % (pos_on_ref, ' '.join(base_counts[pos_on_ref])));
+			fp_out.write('%d\t%s\t%s\n' % (pos_on_ref, bases[pos_on_ref], ' '.join(base_counts[pos_on_ref])));
 		fp_out.write('\n');
 
-		fp_out.write('average_base_accuracy\n');
-		fp_out.write('%.2f\n' % (average_accuracy));
+		fp_out.write('average_base_accuracy\taverage_base_accuracy_only_called_bases\n');
+		fp_out.write('%.2f\t%.2f\n' % (average_accuracy, average_accuracy_called_bases));
 		fp_out.close();
 	sys.stderr.write('\n');
 
-	return average_accuracy;
+	return [average_accuracy, average_accuracy_called_bases];
 
 
 

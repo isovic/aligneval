@@ -45,9 +45,10 @@ def main():
 	[hashed_reference, num_references, num_unique_references] = utility_sam.HashSAMWithFilter(reference_sam, {});
 	positions = parse_vcf_positions(vcf_file);
 
-	accuracy = utility_sam.CountCorrectlyMappedBasesAtPositions(hashed_query, hashed_reference, positions);
+	out_summary_prefix = os.path.basename(vcf_file);
+	accuracy = utility_sam.CountCorrectlyMappedBasesAtPositions(hashed_query, hashed_reference, positions, out_summary_prefix=out_summary_prefix);
 	sys.stderr.write('Accuracy: %.2f\n' % accuracy);
-	
+
 
 
 if __name__ == "__main__":

@@ -49,6 +49,9 @@ def EvaluateAlignmentsFromPath(alignments_path, sam_suffix='', bp_dists=[10]):
 	
 	return EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder, force_rerun=True, sam_suffix=sam_suffix, verbose_level=2, bp_dists=bp_dists);
 
+### Example usage:
+# EvaluateAlignments('reads-simulated/reads.sam', ['alignment/alignments.sam'], 'simulated_nanopore/escherichia_coli', 'alignments/');
+
 def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder, force_rerun=False, sam_suffix='', verbose_level=0, plot_results=False, bp_dists=[10]):
 	filter_reads_with_multiple_alignments = False;
 	reference_sequence_file = SCRIPT_PATH + '/../' + REFERENCE_GENOMES_ROOT + '/' + os.path.basename(dataset_name) + '.fa';
@@ -1512,5 +1515,33 @@ def WriteSummary(sam_filenames, summary_lines, out_summary_path):
 
 
 
+def verbose_usage_and_exit():
+	sys.stderr.write('Compares two sam files and compares alignment positions and accuracy of mapped bases.\n');
+	sys.stderr.write('\n');
+	sys.stderr.write('Usage:\n');
+	sys.stderr.write('\t%s <alignments.sam> <reference.sam> [<output_path>]' % sys.argv[0]);
+	sys.stderr.write('\n');
+
+	exit(0);
+
+def main():
+	if (len(sys.argv) < 3 or len(sys.argv) > 4):
+		verbose_usage_and_exit();
+
+	sam_file = sys.argv[1];
+	reference_sam = sys.argv[2];
+	output_path = os.path.dirname(sam_file);
+	if (len(sys.argv) == 4):
+		output_path = sys.argv[3];
+
+	timestamp = time.strftime("%Y_%m_%d/%H%M%S");
+
+	if (len(output_path) == 0):
+		output_path = './';
+
+	EvaluateAlignments(reference_sam, [sam_file], timestamp, output_path);
+
+
+
 if __name__ == "__main__":
-	pass;
+	main();

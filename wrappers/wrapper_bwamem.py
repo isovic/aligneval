@@ -90,9 +90,17 @@ def download_and_install():
 	subprocess.call(command, shell='True');
 	sys.stderr.write('\n');
 
+	sys.stderr.write('[%s wrapper] Checking out commit "eb428d7d31ced059ad39af2701a22ebe6d175657" for reproducibility purposes.\n' % (MAPPER_NAME));
+	command = 'cd %s; git checkout eb428d7d31ced059ad39af2701a22ebe6d175657' % (ALIGNER_PATH);
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
 	sys.stderr.write('[%s wrapper] Running make.\n' % (MAPPER_NAME));
 	command = 'cd %s; make' % (ALIGNER_PATH);
 	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
+	sys.stderr.write('[%s wrapper] All instalation steps finished.\n' % (MAPPER_NAME));
 	sys.stderr.write('\n');
 
 

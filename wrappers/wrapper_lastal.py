@@ -134,6 +134,9 @@ def download_and_install():
 	subprocess.call(command, shell='True');
 	sys.stderr.write('\n');
 
+	sys.stderr.write('[%s wrapper] All instalation steps finished.\n' % (MAPPER_NAME));
+	sys.stderr.write('\n');
+
 
 
 def verbose_usage_and_exit():

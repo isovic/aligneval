@@ -91,6 +91,11 @@ def download_and_install():
 	subprocess.call(command, shell='True');
 	sys.stderr.write('\n');
 
+	sys.stderr.write('[%s wrapper] Checking out commit "0087df7bce410b2f9cb7d03efff649106c800b28" for reproducibility purposes.\n' % (MAPPER_NAME));
+	command = 'cd %s; git checkout 0087df7bce410b2f9cb7d03efff649106c800b28' % (ALIGNER_PATH);
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
 	yes_no = raw_input("[%s wrapper] requires some libraries to be installed. Continue? [y/n] " % (MAPPER_NAME));
 	if (yes_no != 'y'):
 		return;
@@ -107,6 +112,9 @@ def download_and_install():
 	command = 'cd %s; make' % (ALIGNER_PATH);
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
 	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+	
+	sys.stderr.write('[%s wrapper] All instalation steps finished.\n' % (MAPPER_NAME));
 	sys.stderr.write('\n');
 
 

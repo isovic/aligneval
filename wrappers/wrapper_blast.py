@@ -46,6 +46,21 @@ outfmt = 'qseqid qlen qstart qend sseqid slen sstart send sstrand evalue bitscor
 
 
 
+# TODO:
+# Fix this error:
+	# [BLAST wrapper] BLAST wrapper script finished processing.
+	# [BLAST wrapper] Converting BLAST output to SAM file...
+	# Current BLAST output line: 21903400Traceback (most recent call last):
+	#   File "./run-alignment.py", line 80, in <module>
+	#     wrapper_blast.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
+	#   File "aligneval/wrappers/wrapper_blast.py", line 324, in run
+	#     convert_blast_to_sam(reference_file, reads_file, out_file, sam_file);
+	#   File "aligneval/wrappers/wrapper_blast.py", line 218, in convert_blast_to_sam
+	#     sam_cigar = convert_btop_to_cigar(btop, num_clip_front, num_clip_back, sstrand);
+	#   File "aligneval/wrappers/wrapper_blast.py", line 67, in convert_btop_to_cigar
+	#     if (match_start >= 0 and match_end >= 0):
+	# UnboundLocalError: local variable 'match_end' referenced before assignment
+
 def convert_btop_to_cigar(btop, num_clip_front, num_clip_back, sstrand, use_extended_cigar=False):
 	cigar_ops = [];
 
@@ -55,6 +70,7 @@ def convert_btop_to_cigar(btop, num_clip_front, num_clip_back, sstrand, use_exte
 
 	# Convert the BTOP format into the CIGAR format.
 	match_start = 0;
+	match_end = -1;
 	i = 0;
 	while (i < len(btop)):
 		is_digit = btop[i].isdigit();
@@ -338,6 +354,9 @@ def download_and_install():
 	sys.stderr.write('\n');
 
 	# No make required - these are precompiled binaries.
+
+	sys.stderr.write('[%s wrapper] All instalation steps finished.\n' % (MAPPER_NAME));
+	sys.stderr.write('\n');
 
 
 

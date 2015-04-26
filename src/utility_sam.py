@@ -85,8 +85,8 @@ class SAMLine:
 		split_line = line.split('\t');
 		
 		if len(split_line) < 11:
-			print 'ERROR: Line does not contain all mandatory SAM fields!';
-			print 'Line: "%s"' % line;
+			sys.stderr.write('ERROR: Line does not contain all mandatory SAM fields!\n');
+			sys.stderr.write('Line: "%s"\n' % line);
 			self.Clear();
 			self.line_fields_ok = False;
 			return;
@@ -303,10 +303,10 @@ class SAMLine:
 				cigarcount_string += self.cigar[i];
 			i += 1;
 		if (cigarcount_string != ''):
-			print 'ERROR: Faulty CIGAR string!';
-			print 'cigarcount_string: ', cigarcount_string
-			print 'i = ', i;
-			print self.original_line
+			sys.stderr.write('ERROR: Faulty CIGAR string!\n');
+			sys.stderr.write('cigarcount_string: %s\n' % cigarcount_string);
+			sys.stderr.write('i = %d\n' % i);
+			sys.stderr.write('%s\n' % self.original_line);
 			
 			cigar_operations = [];
 		return cigar_operations;
@@ -342,10 +342,10 @@ class SAMLine:
 				cigarcount_string += self.cigar[i];
 			i += 1;
 		if (cigarcount_string != ''):
-			print 'ERROR: Faulty CIGAR string!';
-			print 'cigarcount_string: ', cigarcount_string
-			print 'i = ', i;
-			print self.original_line
+			sys.stderr.write('ERROR: Faulty CIGAR string!\n');
+			sys.stderr.write('cigarcount_string: %s\n' % cigarcount_string);
+			sys.stderr.write('i = %d\n' % i);
+			sys.stderr.write('%s\n' % self.original_line);
 			
 			cigar_operations = [];
 		return cigar_operations;
@@ -564,7 +564,7 @@ def LoadSAM(sam_path, verbose=False):
 	try:
 		fp_reference = open(sam_path, 'r');
 	except IOError:
-		print 'ERROR: Could not open file "%s" for reading!' % sam_path;
+		sys.stderr.write('ERROR: Could not open file "%s" for reading!\n' % sam_path);
 		return [[], []];
 	
 	headers = [];
@@ -594,7 +594,7 @@ def LoadOnlySAMHeaders(sam_path, verbose=False):
 	try:
 		fp_reference = open(sam_path, 'r');
 	except IOError:
-		print 'ERROR: Could not open file "%s" for reading!' % sam_path;
+		sys.stderr.write('ERROR: Could not open file "%s" for reading!\n' % sam_path);
 		return [];
 	
 	headers = [];
@@ -657,7 +657,7 @@ def HashSAM(sam_path):
 	try:
 		fp_reference = open(sam_path, 'r');
 	except IOError:
-		print 'ERROR: Could not open file "%s" for reading!' % sam_path;
+		sys.stderr.write('ERROR: Could not open file "%s" for reading!\n' % sam_path);
 		return [{}, 0];
 	
 	ret = {};
@@ -738,7 +738,7 @@ def HashSAMWithFilter(sam_path, qname_hash_to_filter={}):
 	try:
 		fp_reference = open(sam_path, 'r');
 	except IOError:
-		print 'ERROR: Could not open file "%s" for reading!' % sam_path;
+		sys.stderr.write('ERROR: Could not open file "%s" for reading!\n' % sam_path);
 		return [{}, 0, 0];
 	
 	ret = {};
@@ -883,11 +883,6 @@ def GetExecutionStats(sam_file):
 	return ('\t' + '\n\t'.join([line.strip() for line in lines]));
 
 def ParseMemTime(sam_file):
-	memtime_path = os.path.splitext(sam_file)[0] + '.memtime';
-	fp = open(memtime_path, 'r');
-	lines = [line.strip() for line in fp.readlines() if (len(line.strip()) > 0)];
-	fp.close();
-
 	cmdline = '';
 	realtime = 0;
 	cputime = 0;
@@ -897,6 +892,15 @@ def ParseMemTime(sam_file):
 	rsscache = 0;
 	time_unit = '';
 	mem_unit = '';
+
+	memtime_path = os.path.splitext(sam_file)[0] + '.memtime';
+	try:
+		fp = open(memtime_path, 'r');
+		lines = [line.strip() for line in fp.readlines() if (len(line.strip()) > 0)];
+		fp.close();
+	except Exception, e:
+		sys.stderr.write('Could not find memory and time statistics in file "%s".\n' % (memtime_path));
+		return [cmdline, realtime, cputime, usertime, systemtime, maxrss, time_unit, mem_unit];
 
 	for line in lines:
 		if (line.startswith('Command line:')):
@@ -940,7 +944,7 @@ def WriteSamLines(sam_lines, output_path):
 			i += 1;
 		fp.close();
 	except IOError:
-		print 'ERROR: Could not open file "%s" for writing!' % (output_path);
+		sys.stderr.write('ERROR: Could not open file "%s" for writing!\n' % output_path);
 		return;
 
 def GetBasicStats(sam_lines, allowed_distance=1):
@@ -1141,7 +1145,7 @@ def FindMultipleQnameEntries(sam_files):
 		try:
 			fp_sam = open(sam_file, 'r');
 		except IOError:
-			print 'ERROR: Could not open file "%s" for reading!' % sam_file;
+			sys.stderr.write('ERROR: Could not open file "%s" for reading!\n' % sam_file);
 			return [{}, 0];
 		
 		occurance_hash = {};
@@ -1337,7 +1341,7 @@ def CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference_sam, out_summar
 		if 'blasr' in sam_basename.lower():
 			qname = '/'.join(qname.split('/')[:-1]);
 			if sam_line.clip_count_front != 0 or sam_line.clip_count_back != 0:
-				print 'BLASR CIGAR contains clipping! Please revise clipped_pos! Read: "%s".' % sam_line.qname;
+				sys.stderr.write('BLASR CIGAR contains clipping! Please revise clipped_pos! Read: "%s".\n' % sam_line.qname);
 
 		if (sam_line.IsMapped() == False):
 			continue;

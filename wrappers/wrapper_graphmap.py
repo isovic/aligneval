@@ -19,6 +19,9 @@ MAPPER_NAME = 'GraphMap';
 ALIGNER_PATH = SCRIPT_PATH + '/../../../graphmap/bin';
 BIN = 'graphmap-not_release';
 
+ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap/bin/Linux-x64/';
+BIN = 'graphmap';
+
 
 
 # Function 'run' should provide a standard interface for running a mapper. Given input parameters, it should run the
@@ -100,6 +103,21 @@ def download_and_install():
 	command = 'cd %s; git clone %s' % (basicdefines.ALIGNERS_PATH_ROOT_ABS, ALIGNER_URL);
 	subprocess.call(command, shell='True');
 	sys.stderr.write('\n');
+
+	sys.stderr.write('[%s wrapper] Checking out commit "47549fefed03a90cdd1079264eebac2132207333" for reproducibility purposes.\n' % (MAPPER_NAME));
+	command = 'cd %s; git checkout 47549fefed03a90cdd1079264eebac2132207333' % (ALIGNER_PATH);
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
+	sys.stderr.write('[%s wrapper] Running make.\n' % (MAPPER_NAME));
+	command = 'cd %s; make' % (ALIGNER_PATH);
+	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+	
+	sys.stderr.write('[%s wrapper] All instalation steps finished.\n' % (MAPPER_NAME));
+	sys.stderr.write('\n');
+
 
 
 

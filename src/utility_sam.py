@@ -1444,9 +1444,9 @@ def CountCorrectlyMappedBasesAtPositions(hashed_sam_lines, hashed_reference_sam,
 	i = 0;
 	for qname in hashed_sam_lines.keys():
 		i += 1;
-		if ((i % 100) == 0):
-			sys.stderr.write('\rLine %d' % (i));
-			sys.stderr.flush();
+		# if ((i % 100) == 0):
+		sys.stderr.write('\rLine %d' % (i));
+		sys.stderr.flush();
 
 		sam_line = hashed_sam_lines[qname][0];
 

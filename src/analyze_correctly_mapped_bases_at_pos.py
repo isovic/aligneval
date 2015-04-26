@@ -9,7 +9,7 @@ def parse_vcf_positions(vcf_file):
 		lines = fp.readlines();
 		fp.close();
 	except Exception, e:
-		sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n');
+		sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n' % vcf_file);
 		sys.stderr.write(str(e) + '\n');
 		exit(1);
 
@@ -41,11 +41,16 @@ def main():
 	reference_sam = sys.argv[2];
 	vcf_file = sys.argv[3];
 
+	sys.stderr.write('Loading query SAM file...\n');
 	[hashed_query, num_queries, num_unique_queries] = utility_sam.HashSAMWithFilter(query_sam, {});
+	sys.stderr.write('Loading reference SAM file...\n');
 	[hashed_reference, num_references, num_unique_references] = utility_sam.HashSAMWithFilter(reference_sam, {});
+	sys.stderr.write('Loading positions from the VCF file...\n');
 	positions = parse_vcf_positions(vcf_file);
 
 	out_summary_prefix = os.path.basename(vcf_file);
+
+	sys.stderr.write('Starting the counting process...\n');
 	accuracy = utility_sam.CountCorrectlyMappedBasesAtPositions(hashed_query, hashed_reference, positions, out_summary_prefix=out_summary_prefix);
 	sys.stderr.write('Accuracy: %.2f\n' % accuracy);
 

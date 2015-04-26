@@ -1249,7 +1249,7 @@ def CompareBasePositions(query_sam, ref_sam, switch_ins_and_dels=False):
 	num_mapped_bases = len(qsam_ref_coords) - query_sam.clip_count_front - query_sam.clip_count_back;
 	num_ref_bases = len(rsam_ref_coords) - ref_sam.clip_count_front - ref_sam.clip_count_back;
 
-	if (len(qsam_ref_coords) < len(rsam_ref_coords) or
+	if (len(qsam_ref_coords) != len(rsam_ref_coords) or
 		query_sam.IsMapped() == False or ref_sam.IsMapped() == False or query_sam.rname != ref_sam.rname or query_sam.IsReverse() != ref_sam.IsReverse()):
 		# sys.stderr.write('Warning: Mappers output does not conform to SAM format specification! CIGAR field does not specify sequence of equal length as in the input FASTA file. Possibly hard clipping operations are missing.\n');	
 		return [0, num_mapped_bases, num_ref_bases];
@@ -1375,6 +1375,128 @@ def CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference_sam, out_summar
 	sys.stderr.write('\n');
 
 	return [precision, recall, sum_correct_bases, sum_mapped_bases, total_ref_bases];
+
+
+
+
+
+
+
+
+
+### Counts the number of bases mapped to the same position in both SAMLines.
+def CompareBasePositionsAtPositions(query_sam, ref_sam, base_counts):
+
+	if (query_sam.CalcReadLengthFromCigar() != ref_sam.CalcReadLengthFromCigar() or
+		query_sam.IsMapped() == False or ref_sam.IsMapped() == False or query_sam.rname != ref_sam.rname or query_sam.IsReverse() != ref_sam.IsReverse()):
+		# sys.stderr.write('Warning: Mappers output does not conform to SAM format specification! CIGAR field does not specify sequence of equal length as in the input FASTA file. Possibly hard clipping operations are missing.\n');	
+		return;
+
+	qsam_base_pos = {};
+	rsam_base_pos = {};
+
+	# Find the positions of all the query bases.
+	query_cigpos = query_sam.CalcCigarStartingPositions(True);
+	for cigpos in query_cigpos:
+		[cig_count, cig_op, pos_on_ref, pos_on_query] = cigpos;
+		if (pos_on_ref in base_counts):
+			qsam_base_pos[pos_on_ref] = pos_on_query;
+
+	# Find the positions of all the reference bases.
+	ref_cigpos = ref_sam.CalcCigarStartingPositions(False, switch_ins_and_dels);
+	for cigpos in ref_cigpos:
+		[cig_count, cig_op, pos_on_ref, pos_on_query] = cigpos;
+		if (pos_on_ref in base_counts):
+			rsam_base_pos[pos_on_ref] = pos_on_query;
+
+	for pos_on_ref in qsam_base_pos.keys():
+		pos_on_query = qsam_base_pos[pos_on_ref];
+		if (pos_on_ref in rsam_base_pos):
+			if (pos_on_query == rsam_base_pos[pos_on_ref]):
+				# base_counts[pos_on_ref].append(query_sam.seq[pos_on_query]);
+				base_pos = (pos_on_query - query_sam.clip_count_front) if (query_sam.clip_op_front == 'H') else pos_on_query;
+				try:
+					# Return the concrete base that was aligned, so we can later compare the mismatch rate.
+					base_counts[pos_on_ref].append(query_sam.seq[base_pos]);
+				except Exception, e:
+					# Something went wrong when accessing the base index. Instead of breaking the program, return a dummy value instead.
+					sys.stderr.write('ERROR: Could not access correct coordinates of a base. Using dummy value "1" instead.\n');
+					sys.stderr.write(str(e) + '\n');
+					base_counts[pos_on_ref].append('1');
+			else:
+				base_counts[pos_on_ref].append('0');
+
+def CountCorrectlyMappedBasesAtPositions(hashed_sam_lines, hashed_reference_sam, positions_on_reference, out_summary_prefix='', sam_basename='', switch_ins_and_dels=False):
+	fp_out = None;
+	out_file = out_summary_prefix + '.csv';
+	if (out_summary_prefix != ''):
+		try:
+			fp_out = open(out_file, 'w');
+		except IOError:
+			sys.stderr.write('[%s] ERROR: Could not open file "%s" for writing!\n' % (__name__, out_file));
+			exit(1);
+	sys.stderr.write('Starting to count the number of correctly mapped bases in the tested SAM file!\n');
+
+	base_counts = {};
+	for position in positions_on_reference:
+		base_counts[position] = [];
+
+	i = 0;
+	for qname in hashed_sam_lines.keys():
+		i += 1;
+		if ((i % 100) == 0):
+			sys.stderr.write('\rLine %d' % (i));
+			sys.stderr.flush();
+
+		sam_line = hashed_sam_lines[qname][0];
+
+		# TODO: THIS NEEDS TO BE REMOVED OR IMPLEMENTED SOMEHOW DIFFERENTLY!!
+		# The point of this was that, BLASR doesn't conform to the SAM standard, and makes it difficult to
+		# uniformly evaluate the results!
+		if 'blasr' in sam_basename.lower():
+			qname = '/'.join(qname.split('/')[:-1]);
+			if sam_line.clip_count_front != 0 or sam_line.clip_count_back != 0:
+				sys.stderr.write('BLASR CIGAR contains clipping! Please revise clipped_pos! Read: "%s".\n' % sam_line.qname);
+
+		if (sam_line.IsMapped() == False):
+			continue;
+		if ((qname in hashed_reference_sam) == False):
+			sys.stderr.write('\tERROR: Reference SAM does not contain qname "%s"!\n' % (qname));
+			continue;
+
+		sam_reference = hashed_reference_sam[qname][0];
+
+		CompareBasePositionsAtPositions(sam_line, sam_reference, base_counts);
+
+	average_accuracy = 0.0;
+
+	for mapped_bases in base_counts.values():
+		correct_bases = 0;
+		wrong_bases = 0;
+		for base in mapped_bases:
+			if (base == '0'):
+				wrong_bases += 1;
+			else:
+				correct_bases += 1;
+		accuracy = float(correct_bases) / float(len(mapped_bases));
+		average_accuracy += accuracy;
+
+	if (len(base_counts.keys()) != 0):
+		average_accuracy /= float(len(base_counts.keys()));
+
+	average_accuracy *= 100.0;
+
+	if (out_summary_prefix != ''):
+		for pos_on_ref in base_counts.keys():
+			fp_out.write('%d\t%s\n' % (pos_on_ref, ' '.join(base_counts[pos_on_ref])));
+		fp_out.write('\n');
+
+		fp_out.write('average_base_accuracy\n');
+		fp_out.write('%.2f\n' % (average_accuracy));
+		fp_out.close();
+	sys.stderr.write('\n');
+
+	return average_accuracy;
 
 
 

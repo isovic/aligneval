@@ -1403,7 +1403,7 @@ def CompareBasePositionsAtPositions(query_sam, ref_sam, base_counts):
 			qsam_base_pos[pos_on_ref] = pos_on_query;
 
 	# Find the positions of all the reference bases.
-	ref_cigpos = ref_sam.CalcCigarStartingPositions(False, switch_ins_and_dels);
+	ref_cigpos = ref_sam.CalcCigarStartingPositions(True);
 	for cigpos in ref_cigpos:
 		[cig_count, cig_op, pos_on_ref, pos_on_query] = cigpos;
 		if (pos_on_ref in base_counts):

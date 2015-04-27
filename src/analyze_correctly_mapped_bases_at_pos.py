@@ -15,15 +15,17 @@ def parse_vcf_positions(vcf_file):
 		exit(1);
 
 	positions = [];
-	bases = [];
+	ref_bases = [];
+	alt_bases = [];
 	for line in lines:
 		if (line[0] == '#'):
 			continue;
 		split_line = line.strip().split('\t');
 		positions.append(int(split_line[1]) - 1);
-		bases.append(split_line[3]);
+		ref_bases.append(split_line[3]);
+		alt_bases.append(split_line[4]);
 
-	return [positions, bases];
+	return [positions, ref_bases, alt_bases];
 
 
 
@@ -49,12 +51,12 @@ def main():
 	sys.stderr.write('Loading reference SAM file...\n');
 	[hashed_reference, num_references, num_unique_references] = utility_sam.HashSAMWithFilter(reference_sam, {});
 	sys.stderr.write('Loading positions from the VCF file...\n');
-	[positions, bases] = parse_vcf_positions(vcf_file);
+	[positions, ref_bases, alt_bases] = parse_vcf_positions(vcf_file);
 
 	out_summary_prefix = os.path.splitext(vcf_file)[0];
 
 	sys.stderr.write('Starting the counting process...\n');
-	[accuracy, accuracy_called_bases] = utility_sam.CountCorrectlyMappedBasesAtPositions(hashed_query, hashed_reference, positions, bases, out_summary_prefix=out_summary_prefix);
+	[accuracy, accuracy_called_bases] = utility_sam.CountCorrectlyMappedBasesAtPositions(hashed_query, hashed_reference, positions, ref_bases, alt_bases, out_summary_prefix=out_summary_prefix);
 	sys.stderr.write('Accuracy: %.2f\n' % accuracy);
 	sys.stderr.write('Accuracy (only called bases): %.2f\n' % accuracy_called_bases);
 

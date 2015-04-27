@@ -1424,9 +1424,18 @@ def CompareBasePositionsAtPositions(query_sam, ref_sam, base_counts):
 					sys.stderr.write(str(e) + '\n');
 					base_counts[pos_on_ref].append('1');
 			else:
-				base_counts[pos_on_ref].append('0');
+				# base_counts[pos_on_ref].append('0');
+				base_pos = (pos_on_query - query_sam.clip_count_front) if (query_sam.clip_op_front == 'H') else pos_on_query;
+				try:
+					# Return the concrete base that was aligned, so we can later compare the mismatch rate.
+					base_counts[pos_on_ref].append(query_sam.seq[base_pos].lower());
+				except Exception, e:
+					# Something went wrong when accessing the base index. Instead of breaking the program, return a dummy value instead.
+					sys.stderr.write('ERROR: Could not access correct coordinates of a base. Using dummy value "1" instead.\n');
+					sys.stderr.write(str(e) + '\n');
+					base_counts[pos_on_ref].append('0');
 
-def CountCorrectlyMappedBasesAtPositions(hashed_sam_lines, hashed_reference_sam, positions_on_reference, bases_on_reference, out_summary_prefix='', sam_basename='', switch_ins_and_dels=False):
+def CountCorrectlyMappedBasesAtPositions(hashed_sam_lines, hashed_reference_sam, positions_on_reference, ref_bases, alt_bases, out_summary_prefix='', sam_basename='', switch_ins_and_dels=False):
 	fp_out = None;
 	out_file = out_summary_prefix + '.csv';
 	if (out_summary_prefix != ''):
@@ -1442,7 +1451,7 @@ def CountCorrectlyMappedBasesAtPositions(hashed_sam_lines, hashed_reference_sam,
 	i = 0;
 	while (i < len(positions_on_reference)):
 		position = positions_on_reference[i];
-		base = bases_on_reference[i];
+		base = '%s\t%s' % (ref_bases[i], alt_bases[i]);
 		base_counts[position] = [];
 		bases[position] = base;
 		i += 1;
@@ -1482,7 +1491,7 @@ def CountCorrectlyMappedBasesAtPositions(hashed_sam_lines, hashed_reference_sam,
 		correct_bases = 0;
 		wrong_bases = 0;
 		for base in mapped_bases:
-			if (base == '0'):
+			if (base == '0' or base.islower() == True):
 				wrong_bases += 1;
 			else:
 				correct_bases += 1;
@@ -1498,9 +1507,9 @@ def CountCorrectlyMappedBasesAtPositions(hashed_sam_lines, hashed_reference_sam,
 
 	average_accuracy *= 100.0;
 	average_accuracy_called_bases *= 100;
-
+	
 	if (out_summary_prefix != ''):
-		fp_out.write('position\tref_base\taligned_bases\n');
+		fp_out.write('position\tref_base\talt_base\taligned_bases\n');
 		for pos_on_ref in base_counts.keys():
 			fp_out.write('%d\t%s\t%s\n' % (pos_on_ref, bases[pos_on_ref], ' '.join(base_counts[pos_on_ref])));
 		fp_out.write('\n');

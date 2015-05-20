@@ -26,23 +26,23 @@ if __name__ == "__main__":
 	machine_names = [];
 	simulated_datasets = [];
 
-	# simulated_datasets.append('Illumina-1k-single_end');								machine_names.append('illumina');
-	# simulated_datasets.append('PacBio-1k');												machine_names.append('pacbio');
-	# simulated_datasets.append('OxfordNanopore-pbsim-observed_last-2d-1k');				machine_names.append('nanopore');
-	# simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-2d-1k');			machine_names.append('nanopore');
+	simulated_datasets.append('Illumina-1k-single_end');								machine_names.append('illumina');
+	simulated_datasets.append('PacBio-1k');												machine_names.append('pacbio');
+	simulated_datasets.append('OxfordNanopore-pbsim-observed_last-2d-1k');				machine_names.append('nanopore');
+	simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-2d-1k');			machine_names.append('nanopore');
 	simulated_datasets.append('OxfordNanopore-pbsim-observed_last-1d-1k');				machine_names.append('nanopore');
-	# simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-1d-1k');			machine_names.append('nanopore');
-	# simulated_datasets.append('OxfordNanopore-pbsim-observed_marginalign-2d-1k');		machine_names.append('nanopore');
+	simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-1d-1k');			machine_names.append('nanopore');
+	simulated_datasets.append('OxfordNanopore-pbsim-observed_marginalign-2d-1k');		machine_names.append('nanopore');
 
 	# simulated_datasets.append('Illumina-0k-single_end');								machine_names.append('illumina');
 	# simulated_datasets.append('OxfordNanopore-pbsim-observed_marginalign-2d-0k');		machine_names.append('nanopore');
 
 	genomes = [];
-	# genomes.append('neisseria_meningitidis');
-	# genomes.append('escherichia_coli');
+	genomes.append('neisseria_meningitidis');
+	genomes.append('escherichia_coli');
 	genomes.append('saccharomyces_cerevisiae');
-	# genomes.append('caenorhabditis_elegans');
-	# genomes.append('hg19_v38-chr3');
+	genomes.append('caenorhabditis_elegans');
+	genomes.append('hg19_v38-chr3');
 
 	num_processed_datasets = 0;
 	num_datasets = len(simulated_datasets) * len(genomes);
@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
 			###########################################
 			###########################################
-			machine_suffix = 'v1';
+			# machine_suffix = 'v1';
 			# for wrapper in aligner_wrappers:
 			# 	wrapper_basename = os.path.splitext(os.path.basename(wrapper))[0];
 			# 	command = '%s.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);' % (wrapper_basename);
@@ -75,12 +75,17 @@ if __name__ == "__main__":
 			# wrapper_graphmap.run(reads_fasta, reference_file, 'nanopore', output_path, machine_suffix);
 			# wrapper_graphmap.run(reads_fasta, reference_file, 'nanopore', output_path, 'test1-' + machine_suffix);
 
-			wrapper_graphmap.run(reads_fasta, reference_file, 'test', output_path, 'test-' + machine_suffix);
+			# wrapper_graphmap.run(reads_fasta, reference_file, 'test', output_path, 'test-' + machine_suffix);
 			# 	wrapper_graphmap.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_names[machine_num] + '-' + machine_suffix);
 			# wrapper_lastal.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 			# wrapper_blasr.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 			# wrapper_bwamem.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 			# wrapper_blast.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
+			
+			machine_suffix = 'v2';
+			wrapper_graphmap.run(reads_fasta, reference_file, 'myers', output_path, 'myers-' + machine_suffix);
+			wrapper_graphmap.run(reads_fasta, reference_file, 'gotoh', output_path, 'gotoh-' + machine_suffix);
+			wrapper_graphmap.run(reads_fasta, reference_file, 'anchor', output_path, 'anchor-' + machine_suffix);
 			###########################################
 			###########################################
 

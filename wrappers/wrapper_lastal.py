@@ -55,6 +55,15 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	elif ((machine_name.lower() == 'nanopore')):
 		parameters = '-v -q 1 -r 1 -a 1 -b 1';
 
+	elif ((machine_name.lower() == 'overlap')):
+		parameters = '-q 1 -r 1 -a 1 -b 1 -T 1';
+
+	elif ((machine_name.lower() == 'longindel')):
+		parameters = '-q 1 -r 1 -a 1 -b 1 -T 1';
+
+	elif ((machine_name.lower() == 'longindel2')):
+		parameters = '-q 1 -r 1 -a 1 -b 1 -T 1 -x 1200';
+
 	elif ((machine_name.lower() == 'debug')):
 		parameters = '-v ';
 
@@ -87,7 +96,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 		sys.stderr.write('\n');
 
 	# Run the indexing process, and measure execution time and memory.
-	if not os.path.exists(reference_db_file + '.suf'):
+	if (True or (not os.path.exists(reference_db_file + '.suf'))):
 		sys.stderr.write('[%s wrapper] Generating index...\n' % (MAPPER_NAME));
 		command = '%s %s/lastdb %s %s' % (basicdefines.measure_command(memtime_file_index), ALIGNER_PATH, reference_db_file, reference_file);
 		sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));

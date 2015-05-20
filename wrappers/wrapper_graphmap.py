@@ -22,6 +22,9 @@ BIN = 'graphmap-not_release';
 ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap/bin/Linux-x64/';
 BIN = 'graphmap';
 
+# ALIGNER_PATH = SCRIPT_PATH + '/../../experimental/graphmap/bin';
+# BIN = 'graphmap-not_release';
+
 
 
 # Function 'run' should provide a standard interface for running a mapper. Given input parameters, it should run the
@@ -46,11 +49,31 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 
 	elif ((machine_name.lower() == 'nanopore')):
 		# parameters = '-x nanopore -v 5 -b 4 -B 0';
-		parameters = '-v 5 -t %d -B 0 -b 3' % num_threads;
+		parameters = '-v 5 -t %d -B 0 -b 3 -w anchor' % num_threads;
 
 	elif ((machine_name.lower() == 'nanoporecirc')):
 		# parameters = '-x nanopore -v 5 -b 4 -B 0';
 		parameters = '-v 5 -t %d -C -B 0 -b 3' % num_threads;
+
+	elif ((machine_name.lower() == 'myers')):
+		# parameters = '-x nanopore -v 5 -b 4 -B 0';
+		parameters = '-w myers -v 5 -t %d -B 0 -b 3' % num_threads;
+
+	elif ((machine_name.lower() == 'gotoh')):
+		# parameters = '-x nanopore -v 5 -b 4 -B 0';
+		parameters = '-w gotoh -v 5 -t %d -B 0 -b 3' % num_threads;
+
+	elif ((machine_name.lower() == 'anchor')):
+		# parameters = '-x nanopore -v 5 -b 4 -B 0';
+		parameters = '-w anchor -v 5 -t %d -B 0 -b 3' % num_threads;
+
+	elif ((machine_name.lower() == 'metagen')):
+		# parameters = '-x nanopore -v 5 -b 4 -B 0';
+		parameters = '-v 5 -t %d -C -B 0 -b 3 -Z' % num_threads;
+
+	elif ((machine_name.lower() == 'metagenanchor')):
+		# parameters = '-x nanopore -v 5 -b 4 -B 0';
+		parameters = '-w anchor -v 5 -t %d -C -B 0 -b 3 -Z' % num_threads;
 
 	elif ((machine_name.lower() == 'debug')):
 		# parameters = '-x nanopore -v 5 -C -B 0 -j 11 -v 7 -y 31676 -n 1 -t 1';

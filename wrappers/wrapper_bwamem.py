@@ -39,6 +39,12 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	elif ((machine_name.lower() == 'nanopore')):
 		parameters = '-t %s -x ont2d' % str(num_threads);
 
+	elif ((machine_name.lower() == 'longindel')):
+		parameters = '-t %s -x ont2d -w 1200 -d 1200' % str(num_threads);
+
+	elif ((machine_name.lower() == 'longindel2')):
+		parameters = '-t %s -x ont2d -w 5000 -d 5000' % str(num_threads);
+
 	elif ((machine_name.lower() == 'debug')):
 		parameters = '-t %s' % str(num_threads);
 
@@ -58,7 +64,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	memtime_file_index = '%s/%s-index.memtime' % (output_path, output_filename);
 	
 	# Run the indexing process, and measure execution time and memory.
-	if (not os.path.exists(reference_file + '.bwt')):
+	if (True or (not os.path.exists(reference_file + '.bwt'))):
 		sys.stderr.write('[%s wrapper] Generating index...\n' % (MAPPER_NAME));
 		command = '%s %s/%s index %s' % (basicdefines.measure_command(memtime_file_index), ALIGNER_PATH, BIN, reference_file);
 		sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));

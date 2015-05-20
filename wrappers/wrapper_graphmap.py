@@ -57,15 +57,15 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 
 	elif ((machine_name.lower() == 'myers')):
 		# parameters = '-x nanopore -v 5 -b 4 -B 0';
-		parameters = '-w myers -v 5 -t %d -B 0 -b 3' % num_threads;
+		parameters = '-a myers -v 5 -t %d -B 0 -b 3' % num_threads;
 
 	elif ((machine_name.lower() == 'gotoh')):
 		# parameters = '-x nanopore -v 5 -b 4 -B 0';
-		parameters = '-w gotoh -v 5 -t %d -B 0 -b 3' % num_threads;
+		parameters = '-a gotoh -v 5 -t %d -B 0 -b 3' % num_threads;
 
 	elif ((machine_name.lower() == 'anchor')):
 		# parameters = '-x nanopore -v 5 -b 4 -B 0';
-		parameters = '-w anchor -v 5 -t %d -B 0 -b 3' % num_threads;
+		parameters = '-a anchor -v 5 -t %d -B 0 -b 3' % num_threads;
 
 	elif ((machine_name.lower() == 'metagen')):
 		# parameters = '-x nanopore -v 5 -b 4 -B 0';
@@ -73,7 +73,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 
 	elif ((machine_name.lower() == 'metagenanchor')):
 		# parameters = '-x nanopore -v 5 -b 4 -B 0';
-		parameters = '-w anchor -v 5 -t %d -C -B 0 -b 3 -Z' % num_threads;
+		parameters = '-a anchor -v 5 -t %d -C -B 0 -b 3 -Z' % num_threads;
 
 	elif ((machine_name.lower() == 'debug')):
 		# parameters = '-x nanopore -v 5 -C -B 0 -j 11 -v 7 -y 31676 -n 1 -t 1';

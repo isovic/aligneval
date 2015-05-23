@@ -239,7 +239,11 @@ class SAMLine:
 		#query.actual_ref_header = ret_ref_header;
 		#query.mapped_pos_with_shift = ret_mapped_pos;
 		
-		line += 'distance = %d\t' % self.min_distance;
+		distance_sign = '+' if (self.clipped_pos > self.actual_ref_pos) else '-';
+		if (self.min_distance == 0):
+			distance_sign = ' ';
+
+		line += 'distance = %c%d\t' % (distance_sign, self.min_distance);
 		line += 'header_hit = %s\t' % (str(self.rname == self.actual_ref_header));
 		line += 'reverse_hit = %s\t' % (str(self.actual_ref_reverse == self.IsReverse()));
 		line += 'qname = %s\t' % self.qname;

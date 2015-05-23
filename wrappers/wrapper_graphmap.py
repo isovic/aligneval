@@ -22,7 +22,10 @@ BIN = 'graphmap-not_release';
 ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap/bin/Linux-x64/';
 BIN = 'graphmap';
 
-# ALIGNER_PATH = SCRIPT_PATH + '/../../experimental/graphmap/bin';
+ALIGNER_PATH = SCRIPT_PATH + '/../../experimental/graphmap/bin';
+BIN = 'graphmap-not_release';
+
+# ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap-old2/bin';
 # BIN = 'graphmap-not_release';
 
 

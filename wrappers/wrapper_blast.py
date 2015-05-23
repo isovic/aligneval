@@ -312,6 +312,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	reads_basename = os.path.splitext(os.path.basename(reads_file))[0];
 	sam_file = '%s/%s.sam' % (output_path, output_filename);
 	out_file = '%s/%s.out' % (output_path, output_filename);
+	filtered_out_file = '%s/%s-filtered.out' % (output_path, output_filename);
 	out_db_path = '%s-blastdb' % (reference_file);
 	memtime_file = '%s/%s.memtime' % (output_path, output_filename);
 	memtime_file_index = '%s/%s-index.memtime' % (output_path, output_filename);
@@ -321,7 +322,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 		sys.stderr.write('[%s wrapper] Generating index...\n' % (MAPPER_NAME));
 		command = '%s %s/makeblastdb -in %s -dbtype nucl -out %s' % (basicdefines.measure_command(memtime_file_index), ALIGNER_PATH, reference_file, out_db_path);
 		sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
-		subprocess.call(command, shell=True);
+		# subprocess.call(command, shell=True);
 		sys.stderr.write('\n\n');
 	else:
 		sys.stderr.write('[%s wrapper] Reference index already exists. Continuing.\n' % (MAPPER_NAME));
@@ -332,12 +333,19 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	# command = '%s %s/%s -task blastn -db %s -query %s -out %s %s' % (basicdefines.measure_command(memtime_file), ALIGNER_PATH, BIN, out_db_path, reads_file, out_file, parameters);
 	command = '%s %s/%s -task blastn -db %s -query %s -out %s %s -outfmt "6 %s"' % (basicdefines.measure_command(memtime_file), ALIGNER_PATH, BIN, out_db_path, reads_file, out_file, parameters, outfmt);
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
+	# subprocess.call(command, shell=True);
+	sys.stderr.write('\n\n');
+
+	# Filter the BLAST out file and extract only one alignment per read (the one with highest alignment score).
+	sys.stderr.write('[%s wrapper] Filtering BLAST output...\n' % (MAPPER_NAME));
+	command = '%s/filterblastout/bin/filterblastout %s > %s' % (SCRIPT_PATH, out_file, filtered_out_file);
+	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
 	subprocess.call(command, shell=True);
 	sys.stderr.write('\n\n');
-	
-	sys.stderr.write('[%s wrapper] %s wrapper script finished processing.\n' % (MAPPER_NAME, MAPPER_NAME));
 
-	convert_blast_to_sam(reference_file, reads_file, out_file, sam_file);
+	convert_blast_to_sam(reference_file, reads_file, filtered_out_file, sam_file);
+
+	sys.stderr.write('[%s wrapper] %s wrapper script finished processing.\n' % (MAPPER_NAME, MAPPER_NAME));
 
 	return sam_file
 

@@ -20,6 +20,11 @@ void filter_blast(std::string blast_out_path) {
 	int64_t num_lines = 0;
 	while (std::getline(infile, line)) {
 		num_lines += 1;
+
+		if ((num_lines % 1000) == 0) {
+			fprintf (stderr, "\rProcessed %ld lines...", num_lines);
+		}
+
 	    std::istringstream iss(line);
 
 	   	// std::string qseqid, sseqid, sstrand, btop, qseq, sseq;
@@ -44,6 +49,8 @@ void filter_blast(std::string blast_out_path) {
 		// if (num_lines > 10)
 		// 	break;
 	}
+
+	fprintf (stderr, "\n");
 
 	// printf ("\n");
 	fprintf (stderr, "Number of unique qnames: %ld\n", top_alignments.size());

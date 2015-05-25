@@ -22,7 +22,7 @@ void filter_blast(std::string blast_out_path) {
 		num_lines += 1;
 
 		if ((num_lines % 1000) == 0) {
-			fprintf (stderr, "\rProcessed %ld lines...", num_lines);
+			fprintf (stderr, "\rProcessed %ld lines (kept: %ld)", num_lines, top_alignments.size());
 		}
 
 	    std::istringstream iss(line);

@@ -90,6 +90,10 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 # root privileges.
 def download_and_install():
 	sys.stderr.write('[%s wrapper] Started installation of %s.\n' % (MAPPER_NAME, MAPPER_NAME));
+	
+	if (not os.path.exists(basicdefines.ALIGNERS_PATH_ROOT_ABS)):
+		os.makedirs(basicdefines.ALIGNERS_PATH_ROOT_ABS);
+
 	sys.stderr.write('[%s wrapper] Cloning git repository.\n' % (MAPPER_NAME));
 	command = 'cd %s; git clone %s' % (basicdefines.ALIGNERS_PATH_ROOT_ABS, ALIGNER_URL);
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));

@@ -91,11 +91,15 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 # root privileges.
 def download_and_install():
 	sys.stderr.write('[%s wrapper] Started installation of %s.\n' % (MAPPER_NAME, MAPPER_NAME));
+	
+	if (not os.path.exists(basicdefines.ALIGNERS_PATH_ROOT_ABS)):
+		os.makedirs(basicdefines.ALIGNERS_PATH_ROOT_ABS);
+	
 	sys.stderr.write('[%s wrapper] Cloning git repository.\n' % (MAPPER_NAME));
 	command = 'cd %s; git clone %s' % (basicdefines.ALIGNERS_PATH_ROOT_ABS, ALIGNER_URL);
 	subprocess.call(command, shell='True');
 	sys.stderr.write('\n');
-	
+
 	# sys.stderr.write('[%s wrapper] Checking out commit "eb428d7d31ced059ad39af2701a22ebe6d175657" for reproducibility purposes.\n' % (MAPPER_NAME));
 	# command = 'cd %s; git checkout eb428d7d31ced059ad39af2701a22ebe6d175657' % (ALIGNER_PATH);
 	sys.stderr.write('[%s wrapper] Checking out commit "1e29bccc65f94ff954ed26d13b884403776025f4" for reproducibility purposes.\n' % (MAPPER_NAME));

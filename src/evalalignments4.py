@@ -178,9 +178,11 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 		[precision_correctly_mapped_bases_strict, recall_correctly_mapped_bases_strict, num_correctly_mapped_bases_strict, dataset_mapped_ref_num_m_ops_strict, num_ref_bases_strict] = [0.0, 0.0, 0, 0, 0];
 		if (count_correct_bases == True):
 			[precision_correctly_mapped_bases_strict, recall_correctly_mapped_bases_strict, num_correctly_mapped_bases_strict, dataset_mapped_ref_num_m_ops_strict, num_ref_bases_strict] = utility_sam.CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference, '', sam_basename=sam_basename[0]);
+			# [precision_correctly_mapped_bases_strict, recall_correctly_mapped_bases_strict, num_correctly_mapped_bases_strict, dataset_mapped_ref_num_m_ops_strict, num_ref_bases_strict] = utility_sam.CountCorrectlyMappedBasesAtPositions(hashed_sam_lines, hashed_reference, '', sam_basename=sam_basename[0]);
 		# percent_correctly_mapped_bases = 0.0;
 		# num_correctly_mapped_bases = 1;
 		# dataset_mapped_ref_num_m_ops = 2;
+# CountCorrectlyMappedBasesAtPositions
 
 		# percent_correctly_mapped_bases_dataset_total = (float(num_correctly_mapped_bases) / float(dataset_total_mapped_ref_num_m_ops)) * 100.0;
 		all_correctly_mapped_bases.append([precision_correctly_mapped_bases, recall_correctly_mapped_bases, num_correctly_mapped_bases, dataset_mapped_ref_num_m_ops, dataset_total_mapped_ref_num_m_ops]);

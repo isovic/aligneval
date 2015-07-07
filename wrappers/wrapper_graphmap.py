@@ -19,11 +19,15 @@ MAPPER_NAME = 'GraphMap';
 ALIGNER_PATH = SCRIPT_PATH + '/../../../graphmap/bin';
 BIN = 'graphmap-not_release';
 
-ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap/bin/Linux-x64/';
-BIN = 'graphmap';
+# ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap/bin/Linux-x64/';
+# BIN = 'graphmap';
 
 # ALIGNER_PATH = SCRIPT_PATH + '/../../experimental/graphmap/bin';
 # BIN = 'graphmap-not_release';
+
+# ALIGNER_PATH = SCRIPT_PATH + '/../../experimental/old_version/graphmap/bin';
+# BIN = 'graphmap-not_release';
+
 # ALIGNER_PATH = SCRIPT_PATH + '/../../experimental/graphmap/bin/Linux-x64/';
 # BIN = 'graphmap';
 
@@ -63,14 +67,22 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	elif ((machine_name.lower() == 'myers')):
 		# parameters = '-x nanopore -v 5 -b 4 -B 0';
 		parameters = '-a myers -v 5 -t %d -B 0 -b 3' % num_threads;
+		# parameters = '-w edlib -v 5 -t %d -B 0 -b 3' % num_threads;
 
 	elif ((machine_name.lower() == 'gotoh')):
 		# parameters = '-x nanopore -v 5 -b 4 -B 0';
 		parameters = '-a gotoh -v 5 -t %d -B 0 -b 3' % num_threads;
+		# parameters = '-w seqan -v 5 -t %d -B 0 -b 3' % num_threads;
 
 	elif ((machine_name.lower() == 'anchor')):
 		# parameters = '-x nanopore -v 5 -b 4 -B 0';
 		parameters = '-a anchor -v 5 -t %d -B 0 -b 3' % num_threads;
+		# parameters = '-w anchor -v 5 -t %d -B 0 -b 3' % num_threads;
+
+	elif ((machine_name.lower() == 'anchorgotoh')):
+		# parameters = '-x nanopore -v 5 -b 4 -B 0';
+		parameters = '-a anchorgotoh -v 5 -t %d -B 0 -b 3' % num_threads;
+		# parameters = '-w anchor -v 5 -t %d -B 0 -b 3' % num_threads;
 
 	elif ((machine_name.lower() == 'metagen')):
 		# parameters = '-x nanopore -v 5 -b 4 -B 0';

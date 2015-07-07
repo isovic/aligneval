@@ -12,29 +12,9 @@ import multiprocessing;
 import basicdefines;
 
 ALIGNER_URL = 'https://github.com/isovic/graphmap.git';
-ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap/bin/Linux-x64/';
-BIN = 'graphmap';
+ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap/';
+BIN = 'bin/Linux-x64/graphmap';
 MAPPER_NAME = 'GraphMap';
-
-ALIGNER_PATH = SCRIPT_PATH + '/../../../graphmap/bin';
-BIN = 'graphmap-not_release';
-
-# ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap/bin/Linux-x64/';
-# BIN = 'graphmap';
-
-# ALIGNER_PATH = SCRIPT_PATH + '/../../experimental/graphmap/bin';
-# BIN = 'graphmap-not_release';
-
-# ALIGNER_PATH = SCRIPT_PATH + '/../../experimental/old_version/graphmap/bin';
-# BIN = 'graphmap-not_release';
-
-# ALIGNER_PATH = SCRIPT_PATH + '/../../experimental/graphmap/bin/Linux-x64/';
-# BIN = 'graphmap';
-
-# ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap-old2/bin';
-# BIN = 'graphmap-not_release';
-
-
 
 # Function 'run' should provide a standard interface for running a mapper. Given input parameters, it should run the
 # alignment process, and convert any custom output results to the SAM format. Function should return a string with the
@@ -142,7 +122,7 @@ def download_and_install():
 	
 	if (not os.path.exists(basicdefines.ALIGNERS_PATH_ROOT_ABS)):
 		os.makedirs(basicdefines.ALIGNERS_PATH_ROOT_ABS);
-	
+
 	sys.stderr.write('[%s wrapper] Cloning git repository.\n' % (MAPPER_NAME));
 	command = 'cd %s; git clone %s' % (basicdefines.ALIGNERS_PATH_ROOT_ABS, ALIGNER_URL);
 	subprocess.call(command, shell='True');

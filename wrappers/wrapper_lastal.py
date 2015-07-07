@@ -12,9 +12,11 @@ import multiprocessing;
 import basicdefines;
 import fastqparser;
 
-ALIGNER_URL = 'http://last.cbrc.jp/last-534.zip';
+# ALIGNER_URL = 'http://last.cbrc.jp/last-534.zip';
+ALIGNER_URL = 'http://last.cbrc.jp/last-475.zip';
 
-ALIGNER_PATH = SCRIPT_PATH + '/../aligners/last-534/src';
+# ALIGNER_PATH = SCRIPT_PATH + '/../aligners/last-534/src';
+ALIGNER_PATH = SCRIPT_PATH + '/../aligners/last-475/src';
 BIN = 'lastal';
 MAPPER_NAME = 'LAST';
 
@@ -47,13 +49,13 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	num_threads = multiprocessing.cpu_count() / 2;
 
 	if ((machine_name.lower() == 'illumina') or (machine_name.lower() == 'roche')):
-		parameters = '-v ';
+		parameters = ' ';
 
 	elif ((machine_name.lower() == 'pacbio')):
-		parameters = '-v -q 1 -r 1 -a 1 -b 1';
+		parameters = '-q 1 -r 1 -a 1 -b 1';
 
 	elif ((machine_name.lower() == 'nanopore')):
-		parameters = '-v -q 1 -r 1 -a 1 -b 1';
+		parameters = '-q 1 -r 1 -a 1 -b 1';
 
 	elif ((machine_name.lower() == 'overlap')):
 		parameters = '-q 1 -r 1 -a 1 -b 1 -T 1';
@@ -65,10 +67,10 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 		parameters = '-q 1 -r 1 -a 1 -b 1 -T 1 -x 1200';
 
 	elif ((machine_name.lower() == 'debug')):
-		parameters = '-v ';
+		parameters = ' ';
 
 	else:			# default
-		parameters = '-v ';
+		parameters = ' ';
 
 
 
@@ -118,7 +120,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	fp = open(sam_file, 'w');
 	fp.write(get_sam_header(reference_file));
 	fp.close();
-	command = '%s %s/../scripts/maf-convert sam %s >> %s' % (basicdefines.measure_command(memtime_file_maftosam), ALIGNER_PATH, maf_file, sam_file);
+	command = '%s %s/../scripts/maf-convert.py sam %s >> %s' % (basicdefines.measure_command(memtime_file_maftosam), ALIGNER_PATH, maf_file, sam_file);
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
 	subprocess.call(command, shell=True);
 	sys.stderr.write('\n\n');

@@ -14,8 +14,6 @@ import subprocess;
 import evalalignments4;
 from basicdefines import *;
 
-from dataset_specification import *
-
 # ### Deprecated
 # def register_scores(simulated_dataset, reference_name, eval_scores, precision_index, recall_index, ret_results_dataset_header, ret_results_genome_header, ret_results_table):
 # 	ret_results_dataset_header.append(simulated_dataset);
@@ -115,26 +113,26 @@ if __name__ == "__main__":
 		command = 'import %s' % (wrapper_basename);
 		exec(command);
 
-	# machine_names = [];
-	# simulated_datasets = [];
+	machine_names = [];
+	simulated_datasets = [];
 
-	# simulated_datasets.append('Illumina-1k-single_end');									machine_names.append('illumina');
-	# simulated_datasets.append('PacBio-1k');												machine_names.append('pacbio');
-	# # simulated_datasets.append('OxfordNanopore-pbsim-observed_last-2d-1k');				machine_names.append('nanopore');
-	# # simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-2d-1k');			machine_names.append('nanopore');
-	# # simulated_datasets.append('OxfordNanopore-pbsim-observed_last-1d-1k');				machine_names.append('nanopore');
-	# # simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-1d-1k');			machine_names.append('nanopore');
-	# # simulated_datasets.append('OxfordNanopore-pbsim-observed_marginalign-2d-1k');			machine_names.append('nanopore');
+	simulated_datasets.append('Illumina-1k-single_end');									machine_names.append('illumina');
+	simulated_datasets.append('PacBio-1k');												machine_names.append('pacbio');
+	# simulated_datasets.append('OxfordNanopore-pbsim-observed_last-2d-1k');				machine_names.append('nanopore');
+	# simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-2d-1k');			machine_names.append('nanopore');
+	# simulated_datasets.append('OxfordNanopore-pbsim-observed_last-1d-1k');				machine_names.append('nanopore');
+	# simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-1d-1k');			machine_names.append('nanopore');
+	# simulated_datasets.append('OxfordNanopore-pbsim-observed_marginalign-2d-1k');			machine_names.append('nanopore');
 
-	# # simulated_datasets.append('Illumina-0k-single_end');								machine_names.append('illumina');
-	# # simulated_datasets.append('OxfordNanopore-pbsim-observed_marginalign-2d-0k');		machine_names.append('nanopore');
+	# simulated_datasets.append('Illumina-0k-single_end');								machine_names.append('illumina');
+	# simulated_datasets.append('OxfordNanopore-pbsim-observed_marginalign-2d-0k');		machine_names.append('nanopore');
 
-	# genomes = [];
-	# # genomes.append('neisseria_meningitidis');
-	# # genomes.append('escherichia_coli');
-	# genomes.append('saccharomyces_cerevisiae');
-	# # genomes.append('caenorhabditis_elegans');
-	# # genomes.append('hg19_v38-chr3');
+	genomes = [];
+	# genomes.append('neisseria_meningitidis');
+	# genomes.append('escherichia_coli');
+	genomes.append('saccharomyces_cerevisiae');
+	# genomes.append('caenorhabditis_elegans');
+	# genomes.append('hg19_v38-chr3');
 
 	num_processed_datasets = 0;
 	num_datasets = len(simulated_datasets) * len(genomes);
@@ -175,8 +173,8 @@ if __name__ == "__main__":
 
 			###########################################
 			###########################################
-			machine_suffix = 'v1';
-			# machine_suffix = 'v2';
+			# machine_suffix = 'v1';
+			machine_suffix = 'v2';
 
 			# Return of the EvaluateAlignmentsFromPath function is organized in a list of tuples, where each tuple has 3 elements.
 			# The first len(bp_dists) tuples contain precision-recall information about mapping accuracy to within allowed distance. Each tuple looks like: (distance, precision, recall).

@@ -96,8 +96,10 @@ def download_and_install():
 	subprocess.call(command, shell='True');
 	sys.stderr.write('\n');
 
-	sys.stderr.write('[%s wrapper] Checking out commit "0087df7bce410b2f9cb7d03efff649106c800b28" for reproducibility purposes.\n' % (MAPPER_NAME));
-	command = 'cd %s; git checkout 0087df7bce410b2f9cb7d03efff649106c800b28' % (ALIGNER_PATH);
+	# sys.stderr.write('[%s wrapper] Checking out commit "0087df7bce410b2f9cb7d03efff649106c800b28" for reproducibility purposes.\n' % (MAPPER_NAME));
+	# command = 'cd %s; git checkout 0087df7bce410b2f9cb7d03efff649106c800b28' % (ALIGNER_PATH);
+	sys.stderr.write('[%s wrapper] Checking out commit "f7bf1e56871d747829a6a34b13b50debdebf1d0b" for reproducibility purposes.\n' % (MAPPER_NAME));
+	command = 'cd %s; git checkout f7bf1e56871d747829a6a34b13b50debdebf1d0b' % (ALIGNER_PATH);
 	subprocess.call(command, shell='True');
 	sys.stderr.write('\n');
 

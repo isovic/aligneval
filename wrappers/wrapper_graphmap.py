@@ -58,7 +58,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 
 	elif ((machine_name.lower() == 'nanopore')):
 		# parameters = '-x nanopore -v 5 -b 4 -B 0';
-		parameters = '-v 5 -t %d -B 0 -b 3 -w anchor' % num_threads;
+		parameters = '-v 5 -t %d -B 0 -b 3' % num_threads;
 
 	elif ((machine_name.lower() == 'nanoporecirc')):
 		# parameters = '-x nanopore -v 5 -b 4 -B 0';
@@ -144,8 +144,11 @@ def download_and_install():
 	subprocess.call(command, shell='True');
 	sys.stderr.write('\n');
 
-	sys.stderr.write('[%s wrapper] Checking out commit "47549fefed03a90cdd1079264eebac2132207333" for reproducibility purposes.\n' % (MAPPER_NAME));
-	command = 'cd %s; git checkout 47549fefed03a90cdd1079264eebac2132207333' % (ALIGNER_PATH);
+
+	# sys.stderr.write('[%s wrapper] Checking out commit "47549fefed03a90cdd1079264eebac2132207333" for reproducibility purposes.\n' % (MAPPER_NAME));
+	# command = 'cd %s; git checkout 47549fefed03a90cdd1079264eebac2132207333' % (ALIGNER_PATH);
+	sys.stderr.write('[%s wrapper] Checking out commit "b215afc661853170a70ce70c1f5471469f068edc" for reproducibility purposes.\n' % (MAPPER_NAME));
+	command = 'cd %s; git checkout b215afc661853170a70ce70c1f5471469f068edc' % (ALIGNER_PATH);
 	subprocess.call(command, shell='True');
 	sys.stderr.write('\n');
 

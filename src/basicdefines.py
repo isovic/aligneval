@@ -3,7 +3,10 @@
 import os
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__));
 
+import sys;
+
 import fnmatch
+import subprocess;
 
 
 
@@ -74,8 +77,31 @@ def find_folders(start_path, depth=0):
 			matches.append(x[0]);
 	return matches;
 
+def execute_command(command):
+	# subprocess.call(command, shell=True);
+	p = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+	[out, err] = p.communicate()
+	returncode = p.returncode;
+	return [out, err, returncode];
+
 def measure_command(measure_file):
         return (SCRIPT_PATH + r'/../tools/cgmemtime/cgmemtime -o ' + measure_file + ' ');
+
+def setup_measure_command():
+	### Run a simple measure to try and see if the Cgroups was initialized.
+	# command = '%s time' % (measure_command('/tmp/temp-measure.txt'));
+	# [out, err, returncode] = execute_command(command);
+	# if (returncode != 0 or ('Could not create new sub-cgroup' in out) or ('Could not create new sub-cgroup' in err)):
+	# if (returncode != 0):
+	sys.stderr.write('Sudo is needed for the Cgroups API (memory and time measurements).\n');
+	command = 'sudo %s/../tools/cgmemtime/cgmemtime --setup -g $USER --perm 775' % (SCRIPT_PATH);
+	[out, err, returncode] = execute_command(command);
+	# p = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+	# [out, err] = p.communicate()
+	# if (('Could not create new sub-cgroup' in out) or ('Could not create new sub-cgroup' in err)):
+	# 	sys.stderr.write('ERROR: Could not initialize Cgmemtime! Exiting.\n');
+	# exit(1);
+
 
 
 if __name__ == '__main__':

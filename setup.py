@@ -53,6 +53,9 @@ def download_aligners():
 		exec(command);
 
 def setup_tools():
+	if (not os.path.exists(basicdefines.TOOLS_ROOT_ABS)):
+		os.makedirs(basicdefines.TOOLS_ROOT_ABS);
+	
 	sys.stderr.write('Cloning Cgmemtime Git repo. Git needs to be installed.\n');
 	command = 'cd %s; git clone https://github.com/isovic/cgmemtime.git' % (basicdefines.TOOLS_ROOT_ABS);
 	subprocess.call(command, shell='True');

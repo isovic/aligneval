@@ -98,7 +98,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 		sys.stderr.write('\n');
 
 	# Run the indexing process, and measure execution time and memory.
-	if (True or (not os.path.exists(reference_db_file + '.suf'))):
+	if ((not os.path.exists(reference_db_file + '.suf'))):
 		sys.stderr.write('[%s wrapper] Generating index...\n' % (MAPPER_NAME));
 		command = '%s %s/lastdb %s %s' % (basicdefines.measure_command(memtime_file_index), ALIGNER_PATH, reference_db_file, reference_file);
 		sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));

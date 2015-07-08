@@ -1,17 +1,22 @@
 #! /usr/bin/python
 
 import matplotlib.pyplot as plt
+
 import os
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__));
 # GOLDEN_PATH = SCRIPT_PATH + '/../golden-bundle';
 import sys
 sys.path.append(SCRIPT_PATH + '/src');
 sys.path.append(SCRIPT_PATH + '/wrappers');
+
 import subprocess;
 
 import evalalignments4;
 from basicdefines import *;
+
 from dataset_specification import *
+
+
 
 if __name__ == "__main__":
 	setup_measure_command();
@@ -21,6 +26,27 @@ if __name__ == "__main__":
 		wrapper_basename = os.path.splitext(os.path.basename(wrapper))[0];
 		command = 'import %s' % (wrapper_basename);
 		exec(command);
+
+	# machine_names = [];
+	# simulated_datasets = [];
+
+	# simulated_datasets.append('Illumina-1k-single_end');								machine_names.append('illumina');
+	# simulated_datasets.append('PacBio-1k');												machine_names.append('pacbio');
+	# # simulated_datasets.append('OxfordNanopore-pbsim-observed_last-2d-1k');				machine_names.append('nanopore');
+	# # simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-2d-1k');			machine_names.append('nanopore');
+	# # simulated_datasets.append('OxfordNanopore-pbsim-observed_last-1d-1k');				machine_names.append('nanopore');
+	# # simulated_datasets.append('OxfordNanopore-pbsim-observed_graphmap-1d-1k');			machine_names.append('nanopore');
+	# # simulated_datasets.append('OxfordNanopore-pbsim-observed_marginalign-2d-1k');		machine_names.append('nanopore');
+
+	# # simulated_datasets.append('Illumina-0k-single_end');								machine_names.append('illumina');
+	# # simulated_datasets.append('OxfordNanopore-pbsim-observed_marginalign-2d-0k');		machine_names.append('nanopore');
+
+	# genomes = [];
+	# # genomes.append('neisseria_meningitidis');
+	# # genomes.append('escherichia_coli');
+	# genomes.append('saccharomyces_cerevisiae');
+	# # genomes.append('caenorhabditis_elegans');
+	# # genomes.append('hg19_v38-chr3');
 
 	num_processed_datasets = 0;
 	num_datasets = len(simulated_datasets) * len(genomes);
@@ -56,7 +82,7 @@ if __name__ == "__main__":
 			wrapper_lastal.run(reads_fasta, reference_file, machine_names[machine_num], output_path, '475-' + machine_suffix);
 			wrapper_blasr.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 			wrapper_bwamem.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
-			wrapper_blast.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
+			# wrapper_blast.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 
 			###########################################
 			###########################################

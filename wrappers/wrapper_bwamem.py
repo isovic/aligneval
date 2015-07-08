@@ -64,7 +64,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	memtime_file_index = '%s/%s-index.memtime' % (output_path, output_filename);
 	
 	# Run the indexing process, and measure execution time and memory.
-	if (True or (not os.path.exists(reference_file + '.bwt'))):
+	if ((not os.path.exists(reference_file + '.bwt'))):
 		sys.stderr.write('[%s wrapper] Generating index...\n' % (MAPPER_NAME));
 		command = '%s %s/%s index %s' % (basicdefines.measure_command(memtime_file_index), ALIGNER_PATH, BIN, reference_file);
 		sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));

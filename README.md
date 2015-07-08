@@ -12,7 +12,7 @@ At the moment the benchmark process only works on simulated data, whereas benchm
 Please note: in order to measure the time/memory consumption, Cgroups API is used. To be able to measure these statistics, the user running the benchmark needs to be allowed the privileges. For this reason, sudo is required.
 
 ### Usage
-Running the ```setup.py``` script lists the possible setup options.
+Running the ```setup.py``` script lists the possible setup options.  
 To install everything (including the generation of simulated datasets), run:  
 ```./setup.py all```  
 
@@ -25,13 +25,13 @@ Alternatively, one can install each tool independantly:
 ```wrappers/wrapper_graphmap.py install```  
 
 Once a tool is installed, its wrapper can be used as a standalone script for running the tool, e.g.:  
-```wrappers/wrapper_graphmap.py run reads.fastq reference.fa nanopore out_alignment_folder/ desired_suffix_of_output```  
+```wrappers/wrapper_graphmap.py run reads.fastq reference.fa nanopore out_aln_folder/ designation```  
 
-If the simulated data has been generated, the alignment process of all mappers can be instantiated with:
+If the simulated data has been generated, the alignment process of all mappers can be instantiated with:  
 ```./run-alignment.py```  
 
 Once all alignments have finished, they can be evaluated with:  
-```./run-evaluation.py```
+```./run-evaluation.py```  
 
 ### Results
 After ```run-evaluation.py``` script finishes executing, all results will be collected in a CSV format, and stored in the ```results/``` folder, in files with appropriate names.

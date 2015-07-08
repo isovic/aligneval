@@ -32,9 +32,7 @@ If the simulated data has been generated, the alignment process of all mappers c
 
 Once all alignments have finished, they can be evaluated with:  
 ``` ./run-evaluation.py ```  
-  
-  
-### Results
+
 After ```run-evaluation.py``` script finishes executing, all results will be collected in a CSV format, and stored in the ```results/``` folder, in files with appropriate names.
 
 Individual alignments for each dataset can be found in the ```evaluation/``` folder.

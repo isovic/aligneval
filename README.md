@@ -25,10 +25,10 @@ Alternatively, one can install each tool independantly:
 ```wrappers/wrapper_graphmap.py install```  
 
 Once a tool is installed, its wrapper can be used as a standalone script for running the tool, e.g.:  
-```wrappers/wrapper_graphmap.py run reads.fastq reference.fa nanopore out_aln_folder/ designation```  
+```wrappers/wrapper_graphmap.py run reads.fastq reference.fa nanopore out_folder/```  
 
 If the simulated data has been generated, the alignment process of all mappers can be instantiated with:  
-```./run-alignment.py```  
+```./run-alignment.py```
 
 Once all alignments have finished, they can be evaluated with:  
 ```./run-evaluation.py```  

@@ -224,9 +224,9 @@ if __name__ == "__main__":
 		sys.stdout.write('\n');
 		i += 1;
 
-	sys.stdout.write('\n');
-	sys.stdout.write('Precision / Recall for number of correctly mapped bases:\n');
-	write_table(sys.stdout, table_cb);
+	# sys.stdout.write('\n');
+	# sys.stdout.write('Precision / Recall for number of correctly mapped bases:\n');
+	# write_table(sys.stdout, table_cb);
 	sys.stdout.write('\n');
 	sys.stdout.write('Strict Precision / Recall for number of correctly mapped bases:\n');
 	write_table(sys.stdout, table_cb_strict);
@@ -246,10 +246,10 @@ if __name__ == "__main__":
 		fp_out_bp.close();
 		i += 1;
 
-	out_path_cb = '%s/precision_recall-correct_bases.csv' % (RESULTS_PATH_ROOT_ABS);
-	fp_out_cb = open(out_path_cb, 'w');
-	write_table(fp_out_cb, table_cb);
-	fp_out_cb.close();
+	# out_path_cb = '%s/precision_recall-correct_bases.csv' % (RESULTS_PATH_ROOT_ABS);
+	# fp_out_cb = open(out_path_cb, 'w');
+	# write_table(fp_out_cb, table_cb);
+	# fp_out_cb.close();
 
 	out_path_cb = '%s/precision_recall-strict-correct_bases.csv' % (RESULTS_PATH_ROOT_ABS);
 	fp_out_cb = open(out_path_cb, 'w');

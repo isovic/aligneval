@@ -50,7 +50,7 @@ if __name__ == "__main__":
 			wrapper_graphmap.run(reads_fasta, reference_file, 'default', output_path, 'default-' + machine_suffix);
 			wrapper_graphmap.run(reads_fasta, reference_file, 'gotoh', output_path, 'gotoh-' + machine_suffix);
 			wrapper_graphmap.run(reads_fasta, reference_file, 'anchor', output_path, 'anchor-' + machine_suffix);
-			wrapper_graphmap.run(reads_fasta, reference_file, 'anchorgotoh', output_path, 'anchorgotoh-' + machine_suffix);
+			# wrapper_graphmap.run(reads_fasta, reference_file, 'anchorgotoh', output_path, 'anchorgotoh-' + machine_suffix);
 
 			wrapper_lastal.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 			wrapper_lastal.run(reads_fasta, reference_file, machine_names[machine_num], output_path, '475-' + machine_suffix);

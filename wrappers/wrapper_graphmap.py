@@ -16,6 +16,12 @@ ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap/';
 BIN = 'bin/Linux-x64/graphmap';
 MAPPER_NAME = 'GraphMap';
 
+# ALIGNER_PATH = '/home/isovic/work/eclipse-workspace/graphmap/';
+# BIN = 'bin/graphmap-not_release';
+
+# ALIGNER_PATH = '/home/isovic/work/eclipse-workspace/temp2/graphmap/';
+# BIN = 'bin/Linux-x64/graphmap';
+
 # Function 'run' should provide a standard interface for running a mapper. Given input parameters, it should run the
 # alignment process, and convert any custom output results to the SAM format. Function should return a string with the
 # path to the output file.
@@ -59,6 +65,11 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 		parameters = '-a anchor -v 5 -t %d -B 0 -b 3' % num_threads;
 		# parameters = '-w anchor -v 5 -t %d -B 0 -b 3' % num_threads;
 
+	elif ((machine_name.lower() == 'anchorcirc')):
+		# parameters = '-x nanopore -v 5 -b 4 -B 0';
+		parameters = '-a anchor -C -v 5 -t %d -B 0 -b 3' % num_threads;
+		# parameters = '-w anchor -v 5 -t %d -B 0 -b 3' % num_threads;
+		
 	elif ((machine_name.lower() == 'anchorgotoh')):
 		# parameters = '-x nanopore -v 5 -b 4 -B 0';
 		parameters = '-a anchorgotoh -v 5 -t %d -B 0 -b 3' % num_threads;

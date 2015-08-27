@@ -1255,7 +1255,23 @@ def CompareBasePositions(query_sam, ref_sam, switch_ins_and_dels=False):
 
 	if (len(qsam_ref_coords) != len(rsam_ref_coords) or
 		query_sam.IsMapped() == False or ref_sam.IsMapped() == False or query_sam.rname != ref_sam.rname or query_sam.IsReverse() != ref_sam.IsReverse()):
-		# sys.stderr.write('Warning: Mappers output does not conform to SAM format specification! CIGAR field does not specify sequence of equal length as in the input FASTA file. Possibly hard clipping operations are missing.\n');	
+		# # sys.stderr.write('Warning: Mappers output does not conform to SAM format specification! CIGAR field does not specify sequence of equal length as in the input FASTA file. Possibly hard clipping operations are missing.\n');	
+		# print query_sam.qname;
+		# # print query_sam.seq;
+		# print query_sam.rname;
+		# print query_sam.IsMapped();
+		# print '';
+		# print ref_sam.qname;
+		# # print ref_sam.seq;
+		# print ref_sam.rname;
+		# print ref_sam.IsMapped();
+		# print '';
+		# print 'len(qsam_ref_coords) != len(rsam_ref_coords) = ', (len(qsam_ref_coords) != len(rsam_ref_coords));
+		# print len(qsam_ref_coords);
+		# print len(rsam_ref_coords);
+		# print 'query_sam.rname != ref_sam.rname = ', query_sam.rname != ref_sam.rname;
+		# print 'query_sam.IsReverse() != ref_sam.IsReverse() = ', query_sam.IsReverse() != ref_sam.IsReverse();
+		# print '---';
 		return [0, num_mapped_bases, num_ref_bases];
 
 	# Find the positions of all the query bases.
@@ -1297,6 +1313,11 @@ def CompareBasePositions(query_sam, ref_sam, switch_ins_and_dels=False):
 			# 	# Just debug output.
 			# 	print 'qsam[i] = %d\trsam[i] = %d\tseq[i] = %s' % (qsam_ref_coords[i], rsam_ref_coords[i], ref_sam.seq[i]);
 		i += 1;
+
+	# print qsam_ref_coords;
+	# print '---';
+	# print rsam_ref_coords;
+	# print '';
 
 	return [num_correct_bases, num_mapped_bases, num_ref_bases];
 
@@ -1371,6 +1392,10 @@ def CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference_sam, out_summar
 
 	precision = (100.0 * float(sum_correct_bases) / float(sum_mapped_bases)) if (sum_mapped_bases > 0) else 0.0;
 	recall = (100.0 * float(sum_correct_bases) / float(total_ref_bases)) if (total_ref_bases) else 0.0;
+
+	if (precision == 0.0):
+		print '\nsum_mapped_bases = %d\n' % (sum_mapped_bases);
+		print 'sum_correct_bases = %d\n' % (sum_correct_bases);
 
 	if (out_summary_prefix != ''):
 		fp_out.write('percent_correct_m\tnum_correct_m\tnum_m_ops_in_reference\n');

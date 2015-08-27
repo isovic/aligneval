@@ -94,8 +94,20 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 		print 'Creating output folders on path "%s".' % final_results_path;
 		os.makedirs(final_results_path);
 
+	# print 'hashed_reference:';
+	# print reference_sam;
+	# print len(hashed_reference.keys());
+	# for key in hashed_reference.keys():
+	# 	# print hashed_reference[key][0].VerboseFormatLine();
+	# 	# print hashed_reference[key][0].FormatAccuracy();
+	# 	print hashed_reference[key][0].Verbose();
+	# 	print '';
+	# print '';
+
 	ret_scores = {};
-	
+
+	# exit(1);
+
 	all_accuracies = [];
 	all_rmsd = [];
 	# all_scores = [];
@@ -156,6 +168,16 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 		[hashed_sam_lines, num_sam_lines, num_unique_sam_lines] = utility_sam.HashSAMLines(sam_lines);
 		[total_mapped, distance_histogram, distance_accuracy, distance_recall, mapq_histograms, mapq_histograms_percentage, summary_line] = CalculateStats(num_unique_references, sam_lines, sam_basename[0], execution_stats, modified_time, intermediate_results_path=intermediate_results_path);
 
+		# print 'hashed_sam_lines:';
+		# print reference_sam;
+		# print len(hashed_sam_lines.keys());
+		# for key in hashed_sam_lines.keys():
+		# 	# print hashed_reference[key][0].VerboseFormatLine();
+		# 	# print hashed_reference[key][0].FormatAccuracy();
+		# 	print hashed_sam_lines[key][0].Verbose();
+		# 	print '';
+		# print '';
+
 		all_distance_histograms.append(distance_histogram);
 		all_distance_accuracy.append(distance_accuracy);
 		all_distance_recall.append(distance_recall);
@@ -178,6 +200,7 @@ def EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder
 		[precision_correctly_mapped_bases_strict, recall_correctly_mapped_bases_strict, num_correctly_mapped_bases_strict, dataset_mapped_ref_num_m_ops_strict, num_ref_bases_strict] = [0.0, 0.0, 0, 0, 0];
 		if (count_correct_bases == True):
 			[precision_correctly_mapped_bases_strict, recall_correctly_mapped_bases_strict, num_correctly_mapped_bases_strict, dataset_mapped_ref_num_m_ops_strict, num_ref_bases_strict] = utility_sam.CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference, '', sam_basename=sam_basename[0]);
+		# exit(0);
 			# [precision_correctly_mapped_bases_strict, recall_correctly_mapped_bases_strict, num_correctly_mapped_bases_strict, dataset_mapped_ref_num_m_ops_strict, num_ref_bases_strict] = utility_sam.CountCorrectlyMappedBasesAtPositions(hashed_sam_lines, hashed_reference, '', sam_basename=sam_basename[0]);
 		# percent_correctly_mapped_bases = 0.0;
 		# num_correctly_mapped_bases = 1;
@@ -538,8 +561,13 @@ def GetROCFromEvaluatedSAM(sam_file, sam_lines, hashed_reference, allowed_distan
 		if (current_mapq != previous_mapq and (i > 0 and sorted_lines_by_quality[i-1].IsMapped()==True)):
 			fn = total_tp - tp + total_not_mapped;
 			tn = total_fp - fp + total_not_mapped;
-			precision = float(tp) / (tp + fp);
-			recall = float(tp) / (tp + fn);
+	
+			# print 'tp = %d' % tp;
+			# print 'fp = %d' % fp;
+			# print 'fn = %d' % fn;
+
+			precision = float(tp) / (tp + fp) if ((tp + fp) != 0) else 0;
+			recall = float(tp) / (tp + fn) if ((tp + fn) != 0) else 0;
 			precision_list.append(precision);
 			recall_list.append(recall);
 			#tpr_list.append(float(tp) / float(tp + fn));
@@ -560,6 +588,7 @@ def GetROCFromEvaluatedSAM(sam_file, sam_lines, hashed_reference, allowed_distan
 		i += 1;
 	
 	fn = total_tp - tp + total_not_mapped;
+
 	precision = tp / (tp + fp) if ((tp + fp != 0)) else 0.0;
 	recall = tp / (tp + fn) if ((tp + fn) != 0) else 0.0;
 	precision_list.append(precision);

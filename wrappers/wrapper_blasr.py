@@ -128,6 +128,12 @@ def download_and_install():
 	sys.stderr.write('[%s wrapper] All instalation steps finished.\n' % (MAPPER_NAME));
 	sys.stderr.write('\n');
 
+# The newer version is a bit more complicated to build.
+# mkdir deps; cd deps; wget https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.12/bin/linux-x86_64-gnu481/hdf5-1.8.12-linux-x86_64-gnu481-shared.tar.gz;
+# tar -xvf hdf5-1.8.12-linux-x86_64-gnu481-shared.tar.gz; cd ..;
+# ./configure.py --no-pbbam HDF5_INCLUDE=/home/isovic/work/eclipse-workspace/git/aligneval/aligners/blasr/deps/hdf5-1.8.12-linux-x86_64-gnu481-shared/include HDF5_LIB=/home/isovic/work/eclipse-workspace/git/aligneval/aligners/blasr/deps/hdf5-1.8.12-linux-x86_64-gnu481-shared/lib;
+# make build-submodule; make
+
 
 
 def verbose_usage_and_exit():

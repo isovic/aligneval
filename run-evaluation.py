@@ -154,7 +154,8 @@ if __name__ == "__main__":
 
 			###########################################
 			###########################################
-			machine_suffix = 'v1';
+			machine_suffix = 'test-v1';
+			# machine_suffix = 'v0.22-default-v1';
 			# machine_suffix = 'v2';
 
 			# Return of the EvaluateAlignmentsFromPath function is organized in a list of tuples, where each tuple has 3 elements.
@@ -191,14 +192,16 @@ if __name__ == "__main__":
 			except Exception, e:
 				sys.stderr.write('Problem extracting the time unit!\n');
 				sys.stderr.write(str(e) + '\n');
-				exit(1);
+				time_unit = 's';
+				# exit(1);
 
 			try:
 				mem_unit = eval_scores.values()[0][len(bp_dists) + 3][0];
 			except Exception, e:
 				sys.stderr.write('Problem extracting the memory unit!\n');
 				sys.stderr.write(str(e) + '\n');
-				exit(1);
+				# exit(1);
+				mem_unit = 'kB';
 
 
 

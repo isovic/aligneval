@@ -63,8 +63,14 @@ if __name__ == "__main__":
 			# # wrapper_blast.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 
 			wrapper_daligner.run('align', reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
-			wrapper_marginalign.run('align', reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
-			wrapper_marginaligngraphmap.run('align', reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
+			
+	        machine_name = machine_names[machine_num];
+	        if (machine_names[machine_num] == 'nanopore' and ('-1d' in simulated_dataset)):
+	                machine_name += '1d';
+	        elif (machine_names[machine_num] == 'nanopore' and ('-2d' in simulated_dataset)):
+	                machine_name += '2d';
+	        wrapper_marginalign.run('run', reads_fastq, reference_file, machine_name, output_path, machine_suffix);
+	        wrapper_marginaligngraphmap.run('run', reads_fastq, reference_file, machine_name, output_path, machine_suffix);
 
 			###########################################
 			###########################################

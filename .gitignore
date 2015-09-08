@@ -6,6 +6,7 @@
 *.maf
 *.pyc
 *.log
+*.tee
 
 */*.pyc
 */*.fasta
@@ -14,6 +15,7 @@
 */*.fq
 */*.sam
 */*.maf
+*/*.tee
 
 */*/*.fasta
 */*/*.fastq

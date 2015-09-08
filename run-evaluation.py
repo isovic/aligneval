@@ -154,7 +154,8 @@ if __name__ == "__main__":
 
 			###########################################
 			###########################################
-			machine_suffix = 'test-v1';
+			# machine_suffix = 'test-v1';
+			machine_suffix = 'v1';
 			# machine_suffix = 'v0.22-default-v1';
 			# machine_suffix = 'v2';
 

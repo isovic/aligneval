@@ -16,12 +16,6 @@ ALIGNER_PATH = SCRIPT_PATH + '/../aligners/graphmap/';
 BIN = 'bin/Linux-x64/graphmap';
 MAPPER_NAME = 'GraphMap';
 
-# ALIGNER_PATH = '/home/isovic/work/eclipse-workspace/graphmap/';
-# BIN = 'bin/graphmap-not_release';
-
-# ALIGNER_PATH = '/home/isovic/work/eclipse-workspace/temp2/graphmap/';
-# BIN = 'bin/Linux-x64/graphmap';
-
 # Function 'run' should provide a standard interface for running a mapper. Given input parameters, it should run the
 # alignment process, and convert any custom output results to the SAM format. Function should return a string with the
 # path to the output file.

@@ -41,7 +41,8 @@ if __name__ == "__main__":
 
 			###########################################
 			###########################################
-			machine_suffix = 'test-v1';
+			machine_suffix = 'v1';
+			# machine_suffix = 'release-v1';
 			# for wrapper in aligner_wrappers:
 			# 	wrapper_basename = os.path.splitext(os.path.basename(wrapper))[0];
 			# 	command = '%s.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);' % (wrapper_basename);
@@ -62,6 +63,8 @@ if __name__ == "__main__":
 			# # wrapper_blast.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 
 			wrapper_daligner.run('align', reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
+			wrapper_marginalign.run('align', reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
+			wrapper_marginaligngraphmap.run('align', reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 
 			###########################################
 			###########################################

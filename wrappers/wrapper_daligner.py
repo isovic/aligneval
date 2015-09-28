@@ -1050,10 +1050,10 @@ def run(run_type, reads_file, reference_file, machine_name, output_path, output_
 				daligner_out_formatted[i] = 'echo "Skipping a rm command."';
 				i += 1;
 				continue;
-			if (daligner_out_formatted[i].strip().startswith('daligner')):
-				daligner_out_formatted[i] = 'echo "Skipping a daligner command."';
-				i += 1;
-				continue;
+			# if (daligner_out_formatted[i].strip().startswith('daligner')):
+			# 	daligner_out_formatted[i] = 'echo "Skipping a daligner command."';
+			# 	i += 1;
+			# 	continue;
 			memtime_file_i = '%s/%s-%d.memtime' % (output_path, output_filename, i);
 			memtime_files.append(memtime_file_i);
 			measure_command_i = measure_command_wrapper(memtime_file_i);

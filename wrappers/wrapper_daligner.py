@@ -413,14 +413,18 @@ def convert_reads_to_pacbio_format(reads_file, daligner_reads_file):
 
 def execute_command(command):
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
+	sys.stderr.flush();
 	subprocess.call(command, shell=True);
 	sys.stderr.write('\n');
+	sys.stderr.flush();
 
 def execute_command_get_stdout(command):
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
+	sys.stderr.flush();
 	p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 	[out, err] = p.communicate()
 	sys.stderr.write('\n');
+	sys.stderr.flush();
 
 	return [out, err];
 
@@ -538,7 +542,7 @@ class Overlap:
 		# sam_cigar = convert_btop_to_cigar(btop, num_clip_front, num_clip_back, sstrand);
 
 		try:
-			qname = header_conversion_hash[read_headers[self.aread-1]];
+			qname = header_conversion_hash[read_headers[self.aread-1]].split()[0];
 			# .split()[0];
 		except:
 			sys.stderr.write('ERROR: Read "%s" cannot be found in the reads file! Faulty alignment in DALIGNER output?\n');
@@ -555,7 +559,7 @@ class Overlap:
 		# 	exit(1);
 
 		flag = 0 if (self.orient == 'n') else 16;
-		rname = daligner_seq_id[1];
+		rname = daligner_seq_id[1].split()[0];
 		pos = daligner_seq_id[2] + self.bstart + 1;
 		mapq = 255;
 		sam_seq = read_seqs[self.aread-1] if (self.orient == 'n') else revcomp_seq(read_seqs[self.aread-1]);
@@ -995,7 +999,9 @@ def run(run_type, reads_file, reference_file, machine_name, output_path, output_
 		command = '%s %s/HPCmapper %s %s %s' % (measure_command_wrapper(memtime_file_hpcmapper), ALIGNER_PATH, parameters, daligner_reference_file, daligner_reads_file);
 		[out, err] = execute_command_get_stdout(command);
 
-		print out;
+		# print out;
+		sys.stderr.write(out + '\n\n');
+		sys.stderr.flush();
 
 		### Replace ampersands with '\n' so it's easier to split commands and add measurement calls to the commands.
 		out = out.replace('&&', '\n');
@@ -1010,15 +1016,54 @@ def run(run_type, reads_file, reference_file, machine_name, output_path, output_
 
 		### Prepare measurement command for each line of the generated script.
 		daligner_out_formatted = [command.split('#')[0].strip() for command in out.split('\n') if (len(command.split('#')[0].strip()) > 0)]
+
+		### This addresses a DALIGNER bug and attempts to pass around it. The bug was: on a larger reference (concretely, hg19 chr6+chr22), DALIGNER split the reference into chunks
+		### and aligned into separate LAS files, namely: L1.1.1.las and L1.2.1.las, but the final LAmerge tried merging L1.1.1 and L1.1.2 which did not exist.
+		### For this reason, the output LAS file was empty.
+		all_intermediate_las = [];
+		i = 0;
+		while (i < len(daligner_out_formatted)):
+			line = daligner_out_formatted[i];
+			line = line.strip();
+			if ('LAmerge' in line):
+				split_line = line.split('LAmerge -v ');
+				intermediate_las = split_line[-1].split()[0];
+				if (intermediate_las == las_file):
+					# print all_intermediate_las;
+					joined_intermediate_las = '';
+					for las in all_intermediate_las:
+						if (os.path.exists('%s/%s.las' % (output_path, las))):
+							joined_intermediate_las += ' %s' % (las);
+					fixed_command = '';
+					if (len(joined_intermediate_las) > 0):
+						fixed_command = '%s LAmerge -v %s %s' % (split_line[0], las_file, joined_intermediate_las);
+						daligner_out_formatted[i] = fixed_command;
+					# print fixed_command;
+					break;
+				all_intermediate_las.append(intermediate_las);
+			i += 1;
+
+		### This part adds time measurements to the DALIGNER script lines.
 		memtime_files = [];
 		i = 0;
 		while (i < len(daligner_out_formatted)):
+			if (daligner_out_formatted[i].strip().startswith('rm')):
+				daligner_out_formatted[i] = 'echo "Skipping a rm command."';
+				i += 1;
+				continue;
+			if (daligner_out_formatted[i].strip().startswith('daligner')):
+				daligner_out_formatted[i] = 'echo "Skipping a daligner command."';
+				i += 1;
+				continue;
 			memtime_file_i = '%s/%s-%d.memtime' % (output_path, output_filename, i);
 			memtime_files.append(memtime_file_i);
 			measure_command_i = measure_command_wrapper(memtime_file_i);
 			daligner_out_formatted[i] = '%s %s' % (measure_command_i, daligner_out_formatted[i]);
 			i += 1;
 		joined_commands = '; '.join(daligner_out_formatted);
+
+		sys.stderr.write('\n\n');
+		sys.stderr.flush();
 
 		### Add the paths so the commands can be executed properly.
 		commands_daligner = 'PATH="$PATH:%s"; echo $PATH; cd %s; %s' % (ALIGNER_PATH, output_path, joined_commands);

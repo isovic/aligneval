@@ -1028,12 +1028,11 @@ def run(run_type, reads_file, reference_file, machine_name, output_path, output_
 			if ('LAmerge' in line):
 				split_line = line.split('LAmerge -v ');
 				intermediate_las = split_line[-1].split()[0];
-				if (intermediate_las == las_file):
+				if (intermediate_las == os.path.splitext(las_file)[0]):
 					# print all_intermediate_las;
 					joined_intermediate_las = '';
 					for las in all_intermediate_las:
-						if (os.path.exists('%s/%s.las' % (output_path, las))):
-							joined_intermediate_las += ' %s' % (las);
+						joined_intermediate_las += ' %s' % (las);
 					fixed_command = '';
 					if (len(joined_intermediate_las) > 0):
 						fixed_command = '%s LAmerge -v %s %s' % (split_line[0], las_file, joined_intermediate_las);

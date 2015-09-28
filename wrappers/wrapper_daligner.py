@@ -617,13 +617,19 @@ def filter_daligner_refs_by_length(min_seq_length, ref_daligner_seq_id):
 		# print 'ref_daligner_seq_id[i] = %s' % (str(ref_daligner_seq_id[i]));
 
 		# if ((i == 0 and ref_daligner_seq_id[i][2] < min_seq_length) or (i > 0 and (ref_daligner_seq_id[i][2] - ref_daligner_seq_id[i-1][2]) < min_seq_length)):
-		if ((i > 0 and (ref_daligner_seq_id[i][2] - ref_daligner_seq_id[i-1][2]) < min_seq_length)):
-			i += 1;
-			continue;
-		ret_daligner_seq_ids.append(ref_daligner_seq_id[i]);
+		# if ((i > 0 and (ref_daligner_seq_id[i][2] - ref_daligner_seq_id[i-1][2]) < min_seq_length)):
+		# 	i += 1;
+		# 	continue;
+
+		# [seq_id, header, pos] = ref_daligner_seq_id[i]
+		if (i == 0 or
+			(i > 0 and ref_daligner_seq_id[i][1] != ref_daligner_seq_id[i-1][1]) or
+			(i > 0 and ref_daligner_seq_id[i][1] == ref_daligner_seq_id[i-1][1] and (ref_daligner_seq_id[i][2] - ref_daligner_seq_id[i-1][2]) >= min_seq_length)):
+			ret_daligner_seq_ids.append(ref_daligner_seq_id[i]);
 		# print 'ret_daligner_seq_ids[-1] = %s' % (str(ret_daligner_seq_ids[-1]));
 
 		i += 1;
+
 	return ret_daligner_seq_ids;
 
 def convert_to_sam(alignment_file, daligner_reference, daligner_reads, header_conversion_hash, out_sam_file):

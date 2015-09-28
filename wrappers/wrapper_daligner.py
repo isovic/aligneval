@@ -108,7 +108,7 @@ def get_fastq_headers_and_lengths(fastq_path):
 	try:
 		fp_in = open(fastq_path, 'r');
 	except IOError:
-		print 'ERROR: Could not open file "%s" for reading!' % fastq_path;
+		sys.stderr.write('ERROR: Could not open file "%s" for reading!\n' % fastq_path);
 		exit(1);
 	
 	seq_id = 0;
@@ -349,7 +349,7 @@ def wrap_fasta_file(fasta_file, daligner_fasta_file):
 
 		current_read += 1;
 
-		if (len(read[1]) <= 10):	### DALIGNER has a lower length limit of 10bp.
+		if (len(read[1]) <= 20):	### DALIGNER has a lower length limit of 10bp.
 			continue;
 
 		read[1] = re.sub("(.{500})", "\\1\n", read[1], 0, re.DOTALL);	### Wrap the sequence line, because DALIGNER has a 9998bp line len limit.
@@ -546,7 +546,13 @@ class Overlap:
 
 		# qname = header_conversion_hash[qname];
 
+		# try:
 		daligner_seq_id = ref_daligner_seq_id[self.bread-1];	### Contains an array of tuples (seq_id, seq_header, start_offset).
+		# except Exception, e:
+		# 	print e;
+		# 	print self.bread;
+		# 	print len(ref_daligner_seq_id);
+		# 	exit(1);
 
 		flag = 0 if (self.orient == 'n') else 16;
 		rname = daligner_seq_id[1];
@@ -604,6 +610,21 @@ def revcomp_seq(sequence):
 	return ret_seq;
 
 
+def filter_daligner_refs_by_length(min_seq_length, ref_daligner_seq_id):
+	ret_daligner_seq_ids = [];
+	i = 0;
+	while (i < len(ref_daligner_seq_id)):
+		# print 'ref_daligner_seq_id[i] = %s' % (str(ref_daligner_seq_id[i]));
+
+		# if ((i == 0 and ref_daligner_seq_id[i][2] < min_seq_length) or (i > 0 and (ref_daligner_seq_id[i][2] - ref_daligner_seq_id[i-1][2]) < min_seq_length)):
+		if ((i > 0 and (ref_daligner_seq_id[i][2] - ref_daligner_seq_id[i-1][2]) < min_seq_length)):
+			i += 1;
+			continue;
+		ret_daligner_seq_ids.append(ref_daligner_seq_id[i]);
+		# print 'ret_daligner_seq_ids[-1] = %s' % (str(ret_daligner_seq_ids[-1]));
+
+		i += 1;
+	return ret_daligner_seq_ids;
 
 def convert_to_sam(alignment_file, daligner_reference, daligner_reads, header_conversion_hash, out_sam_file):
 	try:
@@ -621,6 +642,8 @@ def convert_to_sam(alignment_file, daligner_reference, daligner_reads, header_co
 	[ref_headers, ref_lengths, ref_daligner_seq_id] = get_fastq_headers_and_lengths(daligner_reference);
 	[read_headers, read_seqs, read_quals] = read_fastq(daligner_reads);
 	# [read_headers, read_seqs, read_quals] = read_fastq(daligner_reads);
+
+	ref_daligner_seq_id = filter_daligner_refs_by_length(100, ref_daligner_seq_id);
 
 	STATE_INIT = 0;
 	STATE_HEADER = 1;
@@ -832,6 +855,12 @@ def run(run_type, reads_file, reference_file, machine_name, output_path, output_
 	elif ((machine_name.lower() == 'nanopore')):
 		parameters = '-v -e.7 -k10';
 
+	elif ((machine_name.lower() == 'k9')):
+		parameters = '-v -e.7 -k9';
+
+	elif ((machine_name.lower() == 'k10')):
+		parameters = '-v -e.7 -k10';
+
 	# elif ((machine_name.lower() == 'debug')):
 	# 	parameters = '-t %s' % str(num_threads);
 
@@ -869,8 +898,16 @@ def run(run_type, reads_file, reference_file, machine_name, output_path, output_
 		reference_file = os.path.abspath(reference_file);
 
 	daligner_reference_file = reference_file + '-dalignerreference.fasta';
+	if (os.path.exists(daligner_reference_file)):
+		sys.stderr.write('[%s wrapper] DALIGNER reference already exists. Removing.\n' % (MAPPER_NAME));
+		os.remove(daligner_reference_file);
+
 	if (run_type == 'align' or run_type == 'run'):
 		index_file = daligner_reference_file + '.dam';
+
+		if (os.path.exists(index_file)):
+			sys.stderr.write('[%s wrapper] The DALIGNER index file already exists ("%s"), removing.\n' % (MAPPER_NAME, index_file));
+			os.remove(index_file);
 
 		# Run the indexing process, and measure execution time and memory.
 		# daligner_reference_file = reference_file if (reference_file.lower().endswith('fasta')) else (reference_file + '.fasta');
@@ -886,12 +923,18 @@ def run(run_type, reads_file, reference_file, machine_name, output_path, output_
 			sys.stderr.write('[%s wrapper] Generating index...\n' % (MAPPER_NAME));
 			command = '%s %s/fasta2DAM %s %s' % (measure_command_wrapper(memtime_file_index), ALIGNER_DB_PATH, index_file, daligner_reference_file);
 			execute_command(command);
+			command = '%s %s/DBsplit -x100 %s' % (measure_command_wrapper(memtime_file_index), ALIGNER_DB_PATH, daligner_reference_file);
+			execute_command(command);
 			sys.stderr.write('\n');
 		else:
 			sys.stderr.write('[%s wrapper] Reference index already exists. Continuing.\n' % (MAPPER_NAME));
 			sys.stderr.flush();
 
 	daligner_reads_file = '%s-dalignerreads.fasta' % (os.path.splitext(reads_file)[0]);
+	if (os.path.exists(daligner_reads_file)):
+		sys.stderr.write('[%s wrapper] DALIGNER reads file already exists. Removing.\n' % (MAPPER_NAME));
+		os.remove(daligner_reads_file);
+
 	if (True or (not os.path.exists(daligner_reads_file))):
 		sys.stderr.write('[%s wrapper] Modifying the reads file to have PacBio headers...\n' % (MAPPER_NAME));
 		# command = 'cp %s %s.fasta' % (reads_file, reads_file);
@@ -900,6 +943,10 @@ def run(run_type, reads_file, reference_file, machine_name, output_path, output_
 		sys.stderr.write('\n');
 
 	sys.stderr.write('[%s wrapper] Converting the reads file into a DB file...\n' % (MAPPER_NAME));
+	daligner_reads_file_db = '%s.db' % (daligner_reads_file);
+	if (os.path.exists(daligner_reads_file_db)):
+		sys.stderr.write('[%s wrapper] The DALIGNER reads DB file already exists ("%s"), removing.\n' % (MAPPER_NAME, daligner_reads_file_db));
+		os.remove(daligner_reads_file_db);
 	command = '%s %s/fasta2DB %s.db %s' % (measure_command_wrapper(memtime_file_index), ALIGNER_DB_PATH, daligner_reads_file, daligner_reads_file);
 	execute_command(command);
 	sys.stderr.write('\n');
@@ -1064,7 +1111,7 @@ if __name__ == "__main__":
 		reads_file = sys.argv[2];
 		reference_file = sys.argv[3];
 		machine_name = sys.argv[4];
-		output_path = sys.argv[5];
+		output_path = os.path.abspath(sys.argv[5]);
 		output_suffix = '';
 
 		if (len(sys.argv) == 7):
@@ -1078,7 +1125,7 @@ if __name__ == "__main__":
 		reads_file = sys.argv[2];
 		reference_file = sys.argv[3];
 		machine_name = sys.argv[4];
-		output_path = sys.argv[5];
+		output_path = os.path.abspath(sys.argv[5]);
 		output_suffix = '';
 
 		if (len(sys.argv) == 7):

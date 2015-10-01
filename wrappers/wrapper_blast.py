@@ -376,7 +376,7 @@ def verbose_usage_and_exit():
 	sys.stderr.write('Usage:\n');
 	sys.stderr.write('\t%s mode [<reads_file> <reference_file> <machine_name> <output_path> [<output_suffix>]]\n' % sys.argv[0]);
 	sys.stderr.write('\n');
-	sys.stderr.write('\t- mode          - either "run" or "install". If "install" other parameters can be ommitted.\n');
+	sys.stderr.write('\t- mode          - "run", "install" or "convert". If "install" other parameters can be ommitted.\n');
 	sys.stderr.write('\t- machine_name  - "illumina", "roche", "pacbio", "nanopore" or "default".\n');
 	sys.stderr.write('\t- output_suffix - suffix for the output filename.\n');
 
@@ -403,6 +403,17 @@ if __name__ == "__main__":
 		if (len(sys.argv) == 7):
 			output_suffix = sys.argv[6];
 		run(reads_file, reference_file, machine_name, output_path, output_suffix);
+
+	elif (sys.argv[1] == 'convert'):
+		if (len(sys.argv) < 6):
+			sys.stderr.write('\t%s %s <reads_file> <reference_file> <blast_aln_file> <output_sam_file>\n' % (sys.argv[0], sys.argv[1]));
+
+		reads_file = sys.argv[2];
+		reference_file = sys.argv[3];
+		blast_out_file = sys.argv[4];
+		out_sam_file = sys.argv[5];
+
+		convert_blast_to_sam(reference_file, reads_file, blast_out_file, out_sam_file);
 
 	else:
 		verbose_usage_and_exit();

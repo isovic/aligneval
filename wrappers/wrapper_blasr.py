@@ -47,6 +47,9 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	elif ((machine_name.lower() == 'debug')):
 		parameters = '-nproc %s -sam -bestn 1' % str(num_threads);
 
+	elif ((machine_name.lower() == 'pacbiom4')):
+		parameters = '-nproc %s -bestn 1 -m 4' % str(num_threads);
+
 	else:			# default
 		parameters = '-nproc %s -sam -bestn 1' % str(num_threads);
 

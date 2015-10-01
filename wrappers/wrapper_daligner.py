@@ -683,7 +683,7 @@ def convert_to_sam(alignment_file, daligner_reference, daligner_reads, header_co
 	# Write the SAM header.
 	i = 0;
 	while i < len(ref_headers):
-		line = '@SQ\tSN:%s\tLN:%d\n' % (ref_headers[i], ref_lengths[i]);
+		line = '@SQ\tSN:%s\tLN:%d\n' % (ref_headers[i].split()[0], ref_lengths[i]);
 		fp_out.write(line);
 		i += 1;
 

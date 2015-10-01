@@ -452,7 +452,8 @@ def fix_sam_qnames_after_marginAlign(input_sam_path, ref_header_hash, read_heade
 						except:
 							original_hname = hname;
 							sys.stderr.write('Could not find hname "%s".\n' % (hname));
-						new_line = line.replace(hname, original_hname);
+
+						new_line = line.replace(hname, original_hname.split()[0]);	### Split on whitespaces to report only the gi part of the header.
 						fp_out.write(new_line + '\n');
 						found_hname = True;
 						break;
@@ -481,8 +482,8 @@ def fix_sam_qnames_after_marginAlign(input_sam_path, ref_header_hash, read_heade
 		except:
 			original_rname = qname;
 
-		new_line = line.replace(qname, original_qname);
-		new_line = new_line.replace(rname, original_rname);
+		new_line = line.replace(qname, original_qname.split()[0]);
+		new_line = new_line.replace(rname, original_rname.split()[0]);
 		fp_out.write(new_line + '\n');
 	sys.stderr.write('\n');
 
@@ -590,7 +591,7 @@ def run(run_type, reads_file, reference_file, machine_name, output_path, output_
 
 	sys.stderr.write('[%s wrapper] Fixing SAM qname and rname headers to original values. Temp SAM file: "%s", final SAM file: "%s".\n' % (MAPPER_NAME, temp_sam_file, sam_file));
 	fix_sam_qnames_after_marginAlign(temp_sam_file, ref_header_hash, read_header_hash, sam_file);
-	execute_command('rm %s' % (temp_sam_file));
+#	execute_command('rm %s' % (temp_sam_file));
 	execute_command('mv %s %s' % (temp_memtime_file, memtime_file));
 
 	sys.stderr.write('[%s wrapper] %s wrapper script finished processing.\n' % (MAPPER_NAME, MAPPER_NAME));

@@ -41,3 +41,4 @@ temp/*
 index/*
 tools/*
 
+wrappers/wrapper_graphmap_test.py

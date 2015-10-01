@@ -451,7 +451,8 @@ def fix_sam_qnames_after_marginAlign(input_sam_path, ref_header_hash, read_heade
 						except:
 							original_hname = hname;
 							sys.stderr.write('Could not find hname "%s".\n' % (hname));
-						new_line = line.replace(hname, original_hname);
+						# new_line = line.replace(hname, original_hname);
+						new_line = line.replace(hname, original_hname.split()[0]);	### Split on whitespaces to report only the gi part of the header.
 						fp_out.write(new_line + '\n');
 						found_hname = True;
 						break;
@@ -480,8 +481,10 @@ def fix_sam_qnames_after_marginAlign(input_sam_path, ref_header_hash, read_heade
 		except:
 			original_rname = qname;
 
-		new_line = line.replace(qname, original_qname);
-		new_line = new_line.replace(rname, original_rname);
+		# new_line = line.replace(qname, original_qname);
+		# new_line = new_line.replace(rname, original_rname);
+		new_line = line.replace(qname, original_qname.split()[0]);
+		new_line = new_line.replace(rname, original_rname.split()[0]);
 		fp_out.write(new_line + '\n');
 	sys.stderr.write('\n');
 

@@ -462,7 +462,8 @@ def fix_sam_qnames_after_marginAlign(input_sam_path, ref_header_hash, read_heade
 			else:
 				fp_out.write(line + '\n');
 			continue;
-		sys.stderr.write('\rLine %d' % (i));
+		if ((i % 1000) == 0):
+			sys.stderr.write('\rLine %d' % (i));
 
 		split_line = line.split('\t');
 		qname = split_line[0];

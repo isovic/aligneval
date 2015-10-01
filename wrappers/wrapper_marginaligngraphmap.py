@@ -379,6 +379,7 @@ def modify_reference_headers(input_fastq_path, out_fastq_path):
 		[header, read] = get_single_read(fp_in);
 		if (len(read) == 0):
 			break;
+		read[0] = read[0].split()[0];
 		new_header = read[0][0] + re.sub('[^0-9a-zA-Z]', '_', read[0][1:]); # re.sub("[|:", "_", read[0][1:]);
 		header_hash[new_header[1:]] = read[0][1:];
 		read[0] = new_header;
@@ -411,6 +412,7 @@ def modify_read_headers_and_remove_long_ones(input_fastq_path, out_fastq_path):
 			break;
 		if (len(read[1]) <= 50000):
 			# read[0] = read[0][0] + re.sub('[^0-9a-zA-Z]', '_', read[0][1:]); # re.sub("[|:", "_", read[0][1:]);
+			read[0] = read[0].split()[0];
 			new_header = read[0][0] + re.sub('[^0-9a-zA-Z]', '_', read[0][1:]); # re.sub("[|:", "_", read[0][1:]);
 			header_hash[new_header[1:]] = read[0][1:];
 			read[0] = new_header;

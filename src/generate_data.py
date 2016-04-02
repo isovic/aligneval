@@ -535,9 +535,9 @@ def GenerateOxfordNanoporeFromObservedStatistics(genome_filename, num_reads_to_g
 	# Match rate:             0.67    0.10    0.68    0.17    0.88
 	# Read length:            4713.15 3937.17 4026.00 80.00   94116.00
 	# Difference ratio: 42:34:24 (mismatch:insertion:deletion)
-	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, genome_filename, fold_coverage=coverage, length_mean=4400, length_sd=3900, length_min=50, length_max=100000,
-																accuracy_mean=(1.0 - 0.44), accuracy_sd=0.05, accuracy_min=(1.0 - 0.60), difference_ratio='42:34:24',
-																machine_name='OxfordNanopore-pbsim-observed_graphmap-1d' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
+	# GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, genome_filename, fold_coverage=coverage, length_mean=4400, length_sd=3900, length_min=50, length_max=100000,
+	# 															accuracy_mean=(1.0 - 0.44), accuracy_sd=0.05, accuracy_min=(1.0 - 0.60), difference_ratio='42:34:24',
+	# 															machine_name='OxfordNanopore-pbsim-observed_graphmap-1d' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	# The following call would simulate a generic 40% error rate (not realistic):
 	# GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, genome_filename, fold_coverage=coverage, length_mean=4400, length_sd=3900, length_min=50, length_max=94000,
 	# 															accuracy_mean=(1.0 - 0.40), accuracy_sd=0.05, accuracy_min=(1.0 - 0.60), difference_ratio='44:29:27',
@@ -553,9 +553,9 @@ def GenerateOxfordNanoporeFromObservedStatistics(genome_filename, num_reads_to_g
 	# Match rate:             0.78    0.12    0.84    0.24    0.93
 	# Read length:            5651.16 3466.81 5316.00 102.00  33550.00
 	# Difference ratio: 37:33:30 (mismatch:insertion:deletion)
-	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, genome_filename, fold_coverage=coverage, length_mean=5600, length_sd=3500, length_min=100, length_max=100000,
-																accuracy_mean=(1.0 - 0.32), accuracy_sd=0.11, accuracy_min=(1.0 - 0.60), difference_ratio='37:33:30',
-																machine_name='OxfordNanopore-pbsim-observed_graphmap-2d' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
+	# GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, genome_filename, fold_coverage=coverage, length_mean=5600, length_sd=3500, length_min=100, length_max=100000,
+	# 															accuracy_mean=(1.0 - 0.32), accuracy_sd=0.11, accuracy_min=(1.0 - 0.60), difference_ratio='37:33:30',
+	# 															machine_name='OxfordNanopore-pbsim-observed_graphmap-2d' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	# The following call would simulate a generic 20% error rate (not realistic):
 	# GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, genome_filename, fold_coverage=coverage, length_mean=4400, length_sd=3900, length_min=50, length_max=94000,
 	# 															accuracy_mean=(1.0 - 0.20), accuracy_sd=0.05, accuracy_min=(1.0 - 0.50), difference_ratio='37:23:40',
@@ -623,12 +623,16 @@ def GenerateNGSData(num_reads_to_generate=-1):
 		coverage_hg19v38chr3 = EstimateCoverageForNumReads(REFERENCE_GENOMES_ROOT_ABS, 'hg19_v38-chr3', mean_read_length, num_reads_to_generate) + 1;
 		sys.stderr.write(('Coverage for hg19_v38-chr3: %d' % coverage_hg19v38chr3) + '\n');
 		machine_suffix = '-%dk' % (num_reads_to_generate / 1000);
+		coverage_hg19v38 = EstimateCoverageForNumReads(REFERENCE_GENOMES_ROOT_ABS, 'hg19_v38', mean_read_length, num_reads_to_generate) + 1;
+		sys.stderr.write(('Coverage for hg19: %d' % coverage_hg19v38) + '\n');
+		machine_suffix = '-%dk' % (num_reads_to_generate / 1000);
 
 	GenerateIllumina(REFERENCE_GENOMES_ROOT_ABS, 'neisseria_meningitidis', read_length=150, fold_coverage=coverage_nmeni, mean_fragsize=0, std_fragsize=0, machine_name='Illumina' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	GenerateIllumina(REFERENCE_GENOMES_ROOT_ABS, 'escherichia_coli', read_length=150, fold_coverage=coverage_ecoli, mean_fragsize=0, std_fragsize=0, machine_name='Illumina' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	GenerateIllumina(REFERENCE_GENOMES_ROOT_ABS, 'saccharomyces_cerevisiae', read_length=150, fold_coverage=coverage_scerevisiae, mean_fragsize=0, std_fragsize=0, machine_name='Illumina' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	GenerateIllumina(REFERENCE_GENOMES_ROOT_ABS, 'caenorhabditis_elegans', read_length=150, fold_coverage=coverage_celegans, mean_fragsize=0, std_fragsize=0, machine_name='Illumina' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	GenerateIllumina(REFERENCE_GENOMES_ROOT_ABS, 'hg19_v38-chr3', read_length=150, fold_coverage=coverage_hg19v38chr3, mean_fragsize=0, std_fragsize=0, machine_name='Illumina' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
+	GenerateIllumina(REFERENCE_GENOMES_ROOT_ABS, 'hg19_v38', read_length=150, fold_coverage=coverage_hg19v38, mean_fragsize=0, std_fragsize=0, machine_name='Illumina' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	
 	#Generate454(REFERENCE_GENOMES_ROOT_ABS, 'neisseria_meningitidis', fold_coverage=coverage_nmeni, mean_fragsize=0, std_fragsize=0, machine_name='Roche454' + machine_sufix);
 	#Generate454(REFERENCE_GENOMES_ROOT_ABS, 'escherichia_coli', fold_coverage=coverage_ecoli, mean_fragsize=0, std_fragsize=0, machine_name='Roche454' + machine_sufix);
@@ -660,12 +664,16 @@ def GeneratePacBioData(num_reads_to_generate=-1):
 		coverage_hg19v38chr3 = EstimateCoverageForNumReads(REFERENCE_GENOMES_ROOT_ABS, 'hg19_v38-chr3', mean_read_length, num_reads_to_generate) + 1;
 		sys.stderr.write(('Coverage for hg19_v38-chr3: %d' % coverage_hg19v38chr3) + '\n');
 		machine_suffix = '-%dk' % (num_reads_to_generate / 1000);
+		coverage_hg19v38 = EstimateCoverageForNumReads(REFERENCE_GENOMES_ROOT_ABS, 'hg19_v38', mean_read_length, num_reads_to_generate) + 1;
+		sys.stderr.write(('Coverage for hg19_v38: %d' % coverage_hg19v38) + '\n');
+		machine_suffix = '-%dk' % (num_reads_to_generate / 1000);
 		
 	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'neisseria_meningitidis', fold_coverage=coverage_nmeni, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'escherichia_coli', fold_coverage=coverage_ecoli, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'saccharomyces_cerevisiae', fold_coverage=coverage_scerevisiae, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'caenorhabditis_elegans', fold_coverage=coverage_celegans, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'hg19_v38-chr3', fold_coverage=coverage_hg19v38chr3, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
+	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'hg19_v38', fold_coverage=coverage_hg19v38, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	##############################
 
 def GenerateOxfordNanoporeDataObserved(num_reads_to_generate=-1):
@@ -677,6 +685,7 @@ def GenerateOxfordNanoporeDataObserved(num_reads_to_generate=-1):
 	GenerateOxfordNanoporeFromObservedStatistics('saccharomyces_cerevisiae', num_reads_to_generate=num_reads_to_generate);
 	GenerateOxfordNanoporeFromObservedStatistics('caenorhabditis_elegans', num_reads_to_generate=num_reads_to_generate);
 	GenerateOxfordNanoporeFromObservedStatistics('hg19_v38-chr3', num_reads_to_generate=num_reads_to_generate);
+	GenerateOxfordNanoporeFromObservedStatistics('hg19_v38', num_reads_to_generate=num_reads_to_generate);
 
 def GenerateOxfordNanoporeDataMarginAlign(num_reads_to_generate=-1):
 	##### OXFORD NANOPORE DATA #####
@@ -687,6 +696,31 @@ def GenerateOxfordNanoporeDataMarginAlign(num_reads_to_generate=-1):
 	GenerateOxfordNanopore2dFromReportedStatistics('caenorhabditis_elegans', num_reads_to_generate=num_reads_to_generate);
 	GenerateOxfordNanopore2dFromReportedStatistics('hg19_v38-chr3', num_reads_to_generate=num_reads_to_generate);
 
+def GenerateGridTest(num_reads_to_generate):
+	##### OXFORD NANOPORE DATA #####
+	# --difference-ratio   ratio of differences. substitution:insertion:deletion.
+	# GenerateOxfordNanoporeFromObservedStatistics('caenorhabditis_elegans', num_reads_to_generate=num_reads_to_generate);
+	
+	# genome_filename = 'caenorhabditis_elegans';
+	genome_filename = 'saccharomyces_cerevisiae';
+	error_rates = [0.05, 0.10, 0.15, 0.20, 0.25];
+	read_lengths = [1000, 2000, 3000, 4000, 5000];
+	# error_rates = [0.05, 0.10];
+	# read_lengths = [1000, 2000];
+	error_rates = [0.05];
+	read_lengths = [1000];
+
+	sys.stderr.write(('num_reads_to_generate = %d' % num_reads_to_generate) + '\n');
+
+	for read_length in read_lengths:
+		for error_rate in error_rates:
+			mean_read_length = read_length;
+			coverage = EstimateCoverageForNumReads(REFERENCE_GENOMES_ROOT_ABS, genome_filename, mean_read_length, num_reads_to_generate) + 1;
+			machine_suffix = '-l%dk-e%.2f' % ((read_length / 1000), error_rate);
+
+			GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, genome_filename, fold_coverage=coverage, length_mean=read_length, length_sd=1, length_min=50, length_max=100000,
+																		accuracy_mean=(1.0 - error_rate), accuracy_sd=0.01, accuracy_min=(1.0 - error_rate - 0.01), difference_ratio='51:11:38',
+																		machine_name='GridSearch' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 
 
 def GenerateAll():
@@ -697,7 +731,10 @@ def GenerateAll():
 	GeneratePacBioData(num_reads_to_generate);
 	GenerateOxfordNanoporeDataObserved(num_reads_to_generate);
 
-	num_reads_to_generate = 1;
+	GenerateGridTest(10000);
+
+
+	# num_reads_to_generate = 1;
 	# GenerateOxfordNanoporeDataMarginAlign(num_reads_to_generate);
 	# GenerateNGSData(num_reads_to_generate);
 

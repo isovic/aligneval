@@ -42,3 +42,9 @@ index/*
 tools/*
 
 wrappers/wrapper_graphmap_test.py
+temp*
+
+cachegrind*
+callgrind*
+*.txt
+results1/

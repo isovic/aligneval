@@ -37,6 +37,21 @@ from dataset_specification import *
 # 		for previously_evaluated_mapper in sorted(ret_results_table.keys()):
 # 			ret_results_table[previously_evaluated_mapper].append('-');
 
+def make_uniquebest_sams(alignments_path, sam_suffix, out_sam_suffix):
+	if (sam_suffix == out_sam_suffix):
+		return;
+
+	current_folder_depth = len(alignments_path.split('/'));
+	sam_files = find_files(alignments_path, '*%s.sam' % sam_suffix, (current_folder_depth));
+	for sam_file in sam_files:
+		out_sam_file = '%s-%s.sam' % (sam_file.split('%s.sam' % (sam_suffix))[0], out_sam_suffix);
+		command = '../git/samscripts/src/samfilter.py uniquebest %s %s' % (sam_file, out_sam_file);
+		sys.stderr.write('Executing command: "%s".' % (command));
+#		subprocess.call(command, shell=True);
+
+
+
+
 def register_scores(simulated_dataset, reference_name, eval_scores, eval_scores_index, ret_results_dataset_header, ret_results_genome_header, ret_results_table):
 	ret_results_dataset_header.append(simulated_dataset);
 	ret_results_genome_header.append(reference_name);
@@ -109,6 +124,21 @@ def write_table(fp, table):
 
 
 if __name__ == "__main__":
+	if (len(sys.argv) < 2):
+		sys.stderr.write('Usage:\n');
+		sys.stderr.write('\t%s sam_suffix [options]\n' % (sys.argv[0]));
+		sys.stderr.write('\n');
+		sys.stderr.write('\t- sam_suffix - the suffix of SAM files to collect, not including the ".sam" extension.');
+		sys.stderr.write('\t- Options:\n');
+		sys.stderr.write('\t      --no-strict - Skips the strict per-base evaluation of alignment.\n');
+		sys.stderr.write('\n\n');
+		exit(1);
+
+	use_strict = True;
+	for arg in sys.argv[2:]:
+		if (arg == '--no-strict'):
+			use_strict = False;
+
 	aligner_wrappers = find_files(WRAPPERS_PATH_ROOT_ABS, 'wrapper_*.py');
 	for wrapper in aligner_wrappers:
 		wrapper_basename = os.path.splitext(os.path.basename(wrapper))[0];
@@ -154,16 +184,20 @@ if __name__ == "__main__":
 
 			###########################################
 			###########################################
-			# machine_suffix = 'test-v1';
-			machine_suffix = 'v1';
-			# machine_suffix = 'v0.22-default-v1';
-			# machine_suffix = 'v2';
+			# # machine_suffix = 'test-v1';
+			# machine_suffix = 'v1';
+			# # machine_suffix = 'v0.22-default-v1';
+			# # machine_suffix = 'v2';
+			# machine_suffix = 'v4';
+			
+			# machine_suffix = 'v7';
+			machine_suffix = sys.argv[1];
 
 			# Return of the EvaluateAlignmentsFromPath function is organized in a list of tuples, where each tuple has 3 elements.
 			# The first len(bp_dists) tuples contain precision-recall information about mapping accuracy to within allowed distance. Each tuple looks like: (distance, precision, recall).
 			# Following is a tuple describing the per-base accuracy: (dummy_value, precision, recall).
 			# Following is a tuple describing more strict per-base accuracy (bases must align equally both in the reference and the read coordinates): (dummy_value, precision, recall).
-			eval_scores = evalalignments4.EvaluateAlignmentsFromPath(output_path, machine_suffix, bp_dists=bp_dists);
+			eval_scores = evalalignments4.EvaluateAlignmentsFromPath(output_path, machine_suffix, bp_dists=bp_dists, count_correct_bases=use_strict);
 			# eval_scores = evalalignments4.EvaluateAlignmentsFromPath(output_path, 'GraphMap-v1', bp_dists=bp_dists);
 			print eval_scores;
 			print '';
@@ -219,7 +253,7 @@ if __name__ == "__main__":
 	table_cb_strict = convert_results_table(results_cb_strict_dataset_header, results_cb_strict_genome_header, results_cb_strict_table);
 	table_cputime = convert_results_table(results_cputime_dataset_header, results_cputime_genome_header, results_cputime_table);
 	table_maxrss = convert_results_table(results_maxrss_dataset_header, results_maxrss_genome_header, results_maxrss_table);
-
+	
 	# Outputting the results to stdout.
 	i = 0;
 	while (i < len(bp_dists)):
@@ -237,6 +271,8 @@ if __name__ == "__main__":
 
 
 
+	machine_suffix = sys.argv[1];
+
 	### Writing the results to files.
 	if not os.path.exists(RESULTS_PATH_ROOT_ABS):
 		sys.stderr.write('Creating folder "%s".\n' % (RESULTS_PATH_ROOT_ABS));
@@ -244,7 +280,7 @@ if __name__ == "__main__":
 
 	i = 0;
 	while (i < len(bp_dists)):
-		out_path_bp = '%s/precision_recall-%dbp_distance.csv' % (RESULTS_PATH_ROOT_ABS, bp_dists[i]);
+		out_path_bp = '%s/precision_recall-%dbp_distance-%s.csv' % (RESULTS_PATH_ROOT_ABS, bp_dists[i], machine_suffix);
 		fp_out_bp = open(out_path_bp, 'w');
 		write_table(fp_out_bp, tables_bp[i]);
 		fp_out_bp.close();
@@ -255,17 +291,17 @@ if __name__ == "__main__":
 	# write_table(fp_out_cb, table_cb);
 	# fp_out_cb.close();
 
-	out_path_cb = '%s/precision_recall-strict-correct_bases.csv' % (RESULTS_PATH_ROOT_ABS);
+	out_path_cb = '%s/precision_recall-strict-correct_bases-%s.csv' % (RESULTS_PATH_ROOT_ABS, machine_suffix);
 	fp_out_cb = open(out_path_cb, 'w');
 	write_table(fp_out_cb, table_cb_strict);
 	fp_out_cb.close();
 
-	out_path_cputime = '%s/cpu_time_%s.csv' % (RESULTS_PATH_ROOT_ABS, time_unit);
+	out_path_cputime = '%s/cpu_time_%s-%s.csv' % (RESULTS_PATH_ROOT_ABS, time_unit, machine_suffix);
 	fp_out_cputime = open(out_path_cputime, 'w');
 	write_table(fp_out_cputime, table_cputime);
 	fp_out_cputime.close();
 
-	out_path_maxrss = '%s/memory_%s.csv' % (RESULTS_PATH_ROOT_ABS, mem_unit);
+	out_path_maxrss = '%s/memory_%s-%s.csv' % (RESULTS_PATH_ROOT_ABS, mem_unit, machine_suffix);
 	fp_out_maxrss = open(out_path_maxrss, 'w');
 	write_table(fp_out_maxrss, table_maxrss);
 	fp_out_maxrss.close();

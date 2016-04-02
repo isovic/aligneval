@@ -33,7 +33,7 @@ import utility_sam;
 
 
 
-def EvaluateAlignmentsFromPath(alignments_path, sam_suffix='', bp_dists=[10]):
+def EvaluateAlignmentsFromPath(alignments_path, sam_suffix='', bp_dists=[10], count_correct_bases=True):
 	dataset_name = alignments_path;
 	current_folder_depth = len(alignments_path.split('/'));
 	sam_files = find_files(alignments_path, '*%s.sam' % sam_suffix, (current_folder_depth));
@@ -47,7 +47,7 @@ def EvaluateAlignmentsFromPath(alignments_path, sam_suffix='', bp_dists=[10]):
 	# out_scores_folder = SCRIPT_PATH + '/../' + RESULTS_ROOT + '/' + base_name;
 	out_scores_folder = alignments_path + '';
 	
-	return EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder, force_rerun=True, sam_suffix=sam_suffix, verbose_level=2, bp_dists=bp_dists);
+	return EvaluateAlignments(reference_sam, sam_files, dataset_name, out_scores_folder, force_rerun=True, sam_suffix=sam_suffix, verbose_level=2, bp_dists=bp_dists, count_correct_bases=count_correct_bases);
 
 ### Example usage:
 # EvaluateAlignments('reads-simulated/reads.sam', ['alignment/alignments.sam'], 'simulated_nanopore/escherichia_coli', 'alignments/');

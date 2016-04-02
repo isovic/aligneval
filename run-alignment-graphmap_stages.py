@@ -41,32 +41,14 @@ if __name__ == "__main__":
 
 			###########################################
 			###########################################
-			machine_suffix = 'v1';
-			# machine_suffix = 'release-v1';
-			# for wrapper in aligner_wrappers:
-			# 	wrapper_basename = os.path.splitext(os.path.basename(wrapper))[0];
-			# 	command = '%s.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);' % (wrapper_basename);
-			# 	exec(command);
-
-			wrapper_graphmap.run(reads_fasta, reference_file, 'default', output_path, 'default-' + machine_suffix);
-			wrapper_graphmap.run(reads_fasta, reference_file, 'gotoh', output_path, 'gotoh-' + machine_suffix);
-			wrapper_graphmap.run(reads_fasta, reference_file, 'anchor', output_path, 'anchor-' + machine_suffix);
-
-			wrapper_lastal.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
-			wrapper_blasr.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
-			wrapper_bwamem.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
-			wrapper_blast.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
-			wrapper_daligner.run('align', reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
-
-			machine_name = machine_names[machine_num];
-			if (machine_names[machine_num] == 'nanopore' and ('-1d' in simulated_dataset)):
-				machine_name += '1d';
-			elif (machine_names[machine_num] == 'nanopore' and ('-2d' in simulated_dataset)):
-				machine_name += '2d';
-			wrapper_marginalign.run('run', reads_fastq, reference_file, machine_name, output_path, machine_suffix);
-			wrapper_marginaligngraphmap.run('run', reads_fastq, reference_file, machine_name, output_path, machine_suffix);
-			wrapper_marginaligngraphmap.run('run', reads_fastq, reference_file, 'anchor', output_path, 'anchor-' + machine_suffix);
-
+			machine_suffix = 'v4';
+			wrapper_graphmap.run(reads_fasta, reference_file, 'default', output_path, 'allsteps-' + machine_suffix);
+			wrapper_graphmap_fixedseed.run(reads_fasta, reference_file, 'default', output_path, 'fixedseed13-' + machine_suffix);
+			wrapper_graphmap_onlyseed616.run(reads_fasta, reference_file, 'default', output_path, 'seedonly616-' + machine_suffix);
+			wrapper_graphmap_onlyseed41414.run(reads_fasta, reference_file, 'default', output_path, 'seedonly41414-' + machine_suffix);
+			wrapper_graphmap_noL1.run(reads_fasta, reference_file, 'default', output_path, 'noL1-' + machine_suffix);
+			wrapper_graphmap_noLCSkL1.run(reads_fasta, reference_file, 'default', output_path, 'noLCSkL1-' + machine_suffix);
+			wrapper_graphmap_noLCSkButWithL1.run(reads_fasta, reference_file, 'default', output_path, 'noLCSkButWithL1-' + machine_suffix);
 
 
 			###########################################

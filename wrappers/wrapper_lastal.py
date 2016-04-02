@@ -115,12 +115,35 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	subprocess.call(command, shell=True);
 	sys.stderr.write('\n\n');
 
-	# Run the alignment process, and measure execution time and memory.
 	sys.stderr.write('[%s wrapper] Converting the output MAF to SAM file...\n' % (MAPPER_NAME));
 	fp = open(sam_file, 'w');
 	fp.write(get_sam_header(reference_file));
 	fp.close();
 	command = '%s %s/../scripts/maf-convert.py sam %s >> %s' % (basicdefines.measure_command(memtime_file_maftosam), ALIGNER_PATH, maf_file, sam_file);
+	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
+	subprocess.call(command, shell=True);
+	sys.stderr.write('\n\n');
+
+
+
+	if (output_suffix != ''):
+		maf_file_last_split = '%s/%s-last-split-%s.maf' % (output_path, MAPPER_NAME, output_suffix);
+		sam_file_last_split = '%s/%s-last-split-%s.sam' % (output_path, MAPPER_NAME, output_suffix);
+	else:
+		maf_file_last_split = '%s/%s-last-split.maf' % (output_path, MAPPER_NAME);
+		sam_file_last_split = '%s/%s-last-split.sam' % (output_path, MAPPER_NAME);
+	
+	sys.stderr.write('[%s wrapper] Running last-split on the generated MAF alignments.\n' % (MAPPER_NAME));
+	command = 'cat %s | %s/last-split > %s' % (maf_file, ALIGNER_PATH, maf_file_last_split);
+	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
+	subprocess.call(command, shell=True);
+	sys.stderr.write('\n\n');
+
+	sys.stderr.write('[%s wrapper] Converting last-split output MAF to SAM file...\n' % (MAPPER_NAME));
+	fp = open(sam_file_last_split, 'w');
+	fp.write(get_sam_header(reference_file));
+	fp.close();
+	command = '%s/../scripts/maf-convert.py sam %s >> %s' % (ALIGNER_PATH, maf_file_last_split, sam_file_last_split);
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
 	subprocess.call(command, shell=True);
 	sys.stderr.write('\n\n');

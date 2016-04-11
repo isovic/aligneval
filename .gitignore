@@ -27,7 +27,11 @@
 
 reference-genomes/*
 !reference-genomes/*.tar.gz
-reads-simulated/
+reads-simulated/*/
+!reads-simulated/Illumina-1k-single_end.tar.gz
+!reads-simulated/PacBio-1k.tar.gz
+!reads-simulated/OxfordNanopore-pbsim-observed_last-1d-1k.tar.gz
+!reads-simulated/OxfordNanopore-pbsim-observed_last-2d-1k.tar.gz
 evaluation/
 aligners/
 temp/

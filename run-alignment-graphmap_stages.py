@@ -3,7 +3,6 @@
 import matplotlib.pyplot as plt
 import os
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__));
-# GOLDEN_PATH = SCRIPT_PATH + '/../golden-bundle';
 import sys
 sys.path.append(SCRIPT_PATH + '/src');
 sys.path.append(SCRIPT_PATH + '/wrappers');
@@ -28,7 +27,6 @@ if __name__ == "__main__":
 	machine_num = 0;
 	for simulated_dataset in simulated_datasets:
 		for reference_name in genomes:
-	# for dataset in datasets:
 			sys.stderr.write('[%d/%d] Starting simulated_dataset = "%s", reference_name = "%s"...\n' % ((num_processed_datasets + 1), num_datasets, simulated_dataset, reference_name));
 			reference_file = '%s/%s.fa' % (REFERENCE_GENOMES_ROOT_ABS, reference_name);
 			reads_fastq = '%s/%s/%s/reads.fq' % (READS_SIMULATED_ROOT_ABS, simulated_dataset, reference_name);
@@ -41,7 +39,7 @@ if __name__ == "__main__":
 
 			###########################################
 			###########################################
-			machine_suffix = 'v4';
+			machine_suffix = 'v3';
 			wrapper_graphmap.run(reads_fasta, reference_file, 'default', output_path, 'allsteps-' + machine_suffix);
 			wrapper_graphmap_fixedseed.run(reads_fasta, reference_file, 'default', output_path, 'fixedseed13-' + machine_suffix);
 			wrapper_graphmap_onlyseed616.run(reads_fasta, reference_file, 'default', output_path, 'seedonly616-' + machine_suffix);
@@ -49,7 +47,6 @@ if __name__ == "__main__":
 			wrapper_graphmap_noL1.run(reads_fasta, reference_file, 'default', output_path, 'noL1-' + machine_suffix);
 			wrapper_graphmap_noLCSkL1.run(reads_fasta, reference_file, 'default', output_path, 'noLCSkL1-' + machine_suffix);
 			wrapper_graphmap_noLCSkButWithL1.run(reads_fasta, reference_file, 'default', output_path, 'noLCSkButWithL1-' + machine_suffix);
-
 
 			###########################################
 			###########################################

@@ -707,8 +707,8 @@ def GenerateGridTest(num_reads_to_generate):
 	read_lengths = [1000, 2000, 3000, 4000, 5000];
 	# error_rates = [0.05, 0.10];
 	# read_lengths = [1000, 2000];
-	error_rates = [0.05];
-	read_lengths = [1000];
+#	error_rates = [0.05];
+#	read_lengths = [1000];
 
 	sys.stderr.write(('num_reads_to_generate = %d' % num_reads_to_generate) + '\n');
 

@@ -42,6 +42,13 @@ def unpack_reference_genomes():
 		subprocess.call(('tar -xzvf %s -C %s/' % (file_path, os.path.dirname(file_path))), shell='True');
 	sys.stderr.write('\n');
 
+def unpack_sample_sim_reads():
+	sys.stderr.write('Unpacking pre-simulated data [~400 MB]\n');
+	tar_gz = basicdefines.find_files(basicdefines.READS_SIMULATED_ROOT_ABS, '*.tar.gz');
+	for file_path in tar_gz:
+		subprocess.call(('tar -xzvf %s -C %s/' % (file_path, os.path.dirname(file_path))), shell='True');
+	sys.stderr.write('\n');
+
 def download_aligners():
 	sys.stderr.write('Installing alignment tools.\n');
 
@@ -83,7 +90,7 @@ def verbose_usage_and_exit():
 	sys.stderr.write('\t%s [mode]\n' % sys.argv[0]);
 	sys.stderr.write('\n');
 	sys.stderr.write('\tParameter mode specifies which step to execute.\n');
-	sys.stderr.write('\t- mode - "all", "folders", "references", "aligners", "tools", "simdata"\n');
+	sys.stderr.write('\t- mode - "all", "folders", "references", "aligners", "tools", "simdata" or "generate-simdata".\n');
 	sys.stderr.write('\n');
 	exit(0);
 
@@ -119,6 +126,16 @@ if __name__ == '__main__':
 		mode_valid = True;
 
 	if (mode == 'all' or mode == 'simdata'):
+		# generate_data.GenerateAll();
+		sys.stderr.write('Please make sure you ran "./setup references" and "./setup tools" prior to running this command.\n\n');
+		unpack_sample_sim_reads();
+		if (not os.path.exists('%s/saccharomyces_cerevisiae.fa' % basicdefines.REFERENCE_GENOMES_ROOT_ABS)):
+			sys.stderr.write('ERROR: Can not continue with setting up the simulated data until reference sequences are unpacked! Run "./setup.py references" first.\n');
+			exit(1);
+		generate_data.GenerateGridTest(10000);
+		mode_valid = True;
+
+	if (mode == 'generate-simdata'):
 		generate_data.GenerateAll();
 		mode_valid = True;
 

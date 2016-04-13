@@ -168,15 +168,6 @@ def parse_memtime_files_and_accumulate(memtime_files, final_memtime_file):
 
 
 
-
-
-# Command line: /home/isovic/work/eclipse-workspace/git/aligneval/src/../tools/cgmemtime/cgmemtime -o /home/isovic/work/eclipse-workspace/git/aligneval/src/../evaluation/reads-simulated/OxfordNanopore-pbsim-observed_graphmap-1d-1k/saccharomyces_cerevisiae/GraphMap-v1.memtime /home/isovic/work/eclipse-workspace/git/aligneval/wrappers/../aligners/graphmap/bin/Linux-x64//graphmap -v 5 -t 4 -B 0 -b 3 -r /home/isovic/work/eclipse-workspace/git/aligneval/src/../reference-genomes/saccharomyces_cerevisiae.fa -d /home/isovic/work/eclipse-workspace/git/aligneval/src/../reads-simulated/OxfordNanopore-pbsim-observed_graphmap-1d-1k/saccharomyces_cerevisiae/reads.fa -o /home/isovic/work/eclipse-workspace/git/aligneval/src/../evaluation/reads-simulated/OxfordNanopore-pbsim-observed_graphmap-1d-1k/saccharomyces_cerevisiae/GraphMap-v1.sam
-# Real time:   18.164 s
-# CPU time:   61.911 s
-# User time:   54.086 s
-# System time:    7.825 s
-# Maximum RSS: 1327 MB
-
 def peek(fp, num_chars):
 	data = fp.read(num_chars);
 	if len(data) == 0:

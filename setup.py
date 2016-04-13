@@ -42,6 +42,75 @@ def unpack_reference_genomes():
 		subprocess.call(('tar -xzvf %s -C %s/' % (file_path, os.path.dirname(file_path))), shell='True');
 	sys.stderr.write('\n');
 
+def download_hg19_GRCh38_reference():
+	hg19_GRCh38_path = 'http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz';
+	sys.stderr.write('Downloading the Human reference genome (GRCh38).');
+	command = 'mkdir -p %s/download; cd %s/download; wget %s' % (basicdefines.REFERENCE_GENOMES_ROOT_ABS, basicdefines.REFERENCE_GENOMES_ROOT_ABS, hg19_GRCh38_path);
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
+	hg_archive_filename = os.path.basename(hg19_GRCh38_path);
+	sys.stderr.write('Unpacking the Human reference genome (GRCh38).');
+	command = 'cd %s/download; gunzip %s' % (basicdefines.REFERENCE_GENOMES_ROOT_ABS, hg_archive_filename);
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
+	hg_archive_filename = os.path.basename(hg19_GRCh38_path);
+	sys.stderr.write('Unpacking the Human reference genome (GRCh38).');
+	command = 'mv %s/download/hg38.fa %s/' % (basicdefines.REFERENCE_GENOMES_ROOT_ABS, basicdefines.REFERENCE_GENOMES_ROOT_ABS);
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
+def download_hg19_GRCh37_reference():
+	hg19_GRCh37_path = 'http://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz';
+	sys.stderr.write('Downloading the Human reference genome (GRCh37).\n');
+	command = 'mkdir -p %s/download; cd %s/download; wget %s' % (basicdefines.REFERENCE_GENOMES_ROOT_ABS, basicdefines.REFERENCE_GENOMES_ROOT_ABS, hg19_GRCh37_path);
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
+	hg_archive_filename = os.path.basename(hg19_GRCh37_path);
+	sys.stderr.write('Unpacking the Human reference genome (GRCh37).\n');
+	command = 'cd %s/download; mkdir -p hgchroms; tar -C hgchroms/ -xzvf %s' % (basicdefines.REFERENCE_GENOMES_ROOT_ABS, hg_archive_filename);
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+	
+	hg19_with_masking_fa = '%s/download/hgchroms/hg19_with_masking.fa' % (basicdefines.REFERENCE_GENOMES_ROOT_ABS);
+	sys.stderr.write('Joining the chromosomes into one multifasta file on path: %s.\n' % (hg19_with_masking_fa));
+	command = 'cd %s/download;' % (basicdefines.REFERENCE_GENOMES_ROOT_ABS);
+	command += 'cat hgchroms/chr1.fa > %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr2.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr3.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr4.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr5.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr6.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr7.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr8.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr9.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr10.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr11.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr12.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr13.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr14.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr15.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr16.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr17.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr18.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr19.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr20.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr21.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chr22.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chrX.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chrY.fa >> %s;' % (hg19_with_masking_fa);
+	command += 'cat hgchroms/chrM.fa >> %s;' % (hg19_with_masking_fa);
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
+	hg19_fa = '%s/hg19.fa' % (basicdefines.REFERENCE_GENOMES_ROOT_ABS);
+	sys.stderr.write('Converting the hg19 multifasta (%s) bases to uppercase (%s).\n' % (hg19_with_masking_fa, hg19_fa));
+	command = 'cd %s; %s/samscripts/src/fastqfilter.py touppercase %s %s' % (basicdefines.REFERENCE_GENOMES_ROOT_ABS, basicdefines.TOOLS_ROOT_ABS, hg19_with_masking_fa, hg19_fa);
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
 def unpack_sample_sim_reads():
 	sys.stderr.write('Unpacking pre-simulated data [~400 MB]\n');
 	tar_gz = basicdefines.find_files(basicdefines.READS_SIMULATED_ROOT_ABS, '*.tar.gz');
@@ -65,6 +134,11 @@ def setup_tools():
 
 	sys.stderr.write('Cloning Cgmemtime Git repo. Git needs to be installed.\n');
 	command = 'cd %s; git clone https://github.com/isovic/cgmemtime.git' % (basicdefines.TOOLS_ROOT_ABS);
+	subprocess.call(command, shell='True');
+	sys.stderr.write('\n');
+
+	sys.stderr.write('Cloning Samscripts Git repo. Git needs to be installed.\n');
+	command = 'cd %s; git clone https://github.com/isovic/samscripts.git' % (basicdefines.TOOLS_ROOT_ABS);
 	subprocess.call(command, shell='True');
 	sys.stderr.write('\n');
 
@@ -115,6 +189,9 @@ if __name__ == '__main__':
 
 	if (mode == 'all' or mode == 'references'):
 		unpack_reference_genomes();
+#		download_hg19_GRCh38_reference();
+		sys.stderr.write('Please make sure you ran "./setup tools" prior to running this command.\n\n');
+		download_hg19_GRCh37_reference();
 		mode_valid = True;
 
 	if (mode == 'all' or mode == 'aligners'):
@@ -127,7 +204,7 @@ if __name__ == '__main__':
 
 	if (mode == 'all' or mode == 'simdata'):
 		# generate_data.GenerateAll();
-		sys.stderr.write('Please make sure you ran "./setup references" and "./setup tools" prior to running this command.\n\n');
+		sys.stderr.write('Please make sure you ran "./setup tools" and "./setup references"  prior to running this command.\n\n');
 		unpack_sample_sim_reads();
 		if (not os.path.exists('%s/saccharomyces_cerevisiae.fa' % basicdefines.REFERENCE_GENOMES_ROOT_ABS)):
 			sys.stderr.write('ERROR: Can not continue with setting up the simulated data until reference sequences are unpacked! Run "./setup.py references" first.\n');
@@ -136,6 +213,7 @@ if __name__ == '__main__':
 		mode_valid = True;
 
 	if (mode == 'generate-simdata'):
+		sys.stderr.write('Please make sure you ran "./setup tools" and "./setup references"  prior to running this command.\n\n');
 		generate_data.GenerateAll();
 		mode_valid = True;
 

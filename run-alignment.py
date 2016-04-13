@@ -68,10 +68,10 @@ if __name__ == "__main__":
 			wrapper_lastal.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 			wrapper_blasr.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 			wrapper_bwamem.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
+			wrapper_daligner.run('align', reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 
 			if (use_blast == True):
 				wrapper_blast.run(reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
-			wrapper_daligner.run('align', reads_fasta, reference_file, machine_names[machine_num], output_path, machine_suffix);
 
 			if (use_marginalign == True):
 				machine_name = machine_names[machine_num];

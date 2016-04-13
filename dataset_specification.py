@@ -14,7 +14,7 @@ genomes.append('escherichia_coli');
 genomes.append('saccharomyces_cerevisiae');
 genomes.append('caenorhabditis_elegans');
 genomes.append('hg19_v38-chr3');
-# genomes.append('hg19_v38');
+# genomes.append('hg19');
 
 
 simulated_datasets_grid = [];

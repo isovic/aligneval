@@ -16,27 +16,6 @@ from basicdefines import *;
 
 from dataset_specification import *
 
-# ### Deprecated
-# def register_scores(simulated_dataset, reference_name, eval_scores, precision_index, recall_index, ret_results_dataset_header, ret_results_genome_header, ret_results_table):
-# 	ret_results_dataset_header.append(simulated_dataset);
-# 	ret_results_genome_header.append(reference_name);
-# 	if (eval_scores != None and len(eval_scores.keys()) > 0):
-# 		# Add the new scores to the existing table.
-# 		for evaluated_mapper in sorted(eval_scores.keys()):
-# 			# If a mapper has not been evaluated before, fill the table with '-' characters.
-# 			if ((evaluated_mapper in ret_results_table) == False):
-# 				ret_results_table[evaluated_mapper] = ['-'] * (len(ret_results_dataset_header) - 2);
-# 			eval_score = eval_scores[evaluated_mapper];
-# 			ret_results_table[evaluated_mapper].append('%.2f / %.2f' % (eval_score[precision_index], eval_score[recall_index]));
-# 		# Check if there were mappers in other datasets which were not evaluated on this dataset, and fill the current row with '-' characters.
-# 		for previously_evaluated_mapper in sorted(ret_results_table.keys()):
-# 			if ((previously_evaluated_mapper in eval_scores.keys()) == False):
-# 				ret_results_table[previously_evaluated_mapper].append('-');
-# 	else:
-# 		# In this case, none of the mappers was evalated on this dataset. Fill the entire row with '-' characters.
-# 		for previously_evaluated_mapper in sorted(ret_results_table.keys()):
-# 			ret_results_table[previously_evaluated_mapper].append('-');
-
 def make_uniquebest_sams(alignments_path, sam_suffix, out_sam_suffix):
 	if (sam_suffix == out_sam_suffix):
 		return;
@@ -168,10 +147,18 @@ if __name__ == "__main__":
 	time_unit = 's';
 	mem_unit = 'MB';
 
-	machine_num = 0;
+	all_datasets = [];
 	for simulated_dataset in simulated_datasets:
 		for reference_name in genomes:
-	# for dataset in datasets:
+			all_datasets.append([simulated_dataset, reference_name]);
+	for simulated_dataset in simulated_datasets_grid:
+		for reference_name in genomes_grid:
+			all_datasets.append([simulated_dataset, reference_name]);	
+
+#	machine_num = 0;
+#	for simulated_dataset in simulated_datasets:
+#		for reference_name in genomes:
+	for [simulated_dataset, reference_name] in all_datasets:
 			sys.stderr.write('[%d/%d] Starting simulated_dataset = "%s", reference_name = "%s"...\n' % ((num_processed_datasets + 1), num_datasets, simulated_dataset, reference_name));
 			reference_file = '%s/%s.fa' % (REFERENCE_GENOMES_ROOT_ABS, reference_name);
 			reads_fastq = '%s/%s/%s/reads.fq' % (READS_SIMULATED_ROOT_ABS, simulated_dataset, reference_name);
@@ -184,13 +171,6 @@ if __name__ == "__main__":
 
 			###########################################
 			###########################################
-			# # machine_suffix = 'test-v1';
-			# machine_suffix = 'v1';
-			# # machine_suffix = 'v0.22-default-v1';
-			# # machine_suffix = 'v2';
-			# machine_suffix = 'v4';
-			
-			# machine_suffix = 'v7';
 			machine_suffix = sys.argv[1];
 
 			# Return of the EvaluateAlignmentsFromPath function is organized in a list of tuples, where each tuple has 3 elements.
@@ -209,7 +189,6 @@ if __name__ == "__main__":
 			# register_scores(simulated_dataset, reference_name, eval_scores, 0, 1, results_bp_dataset_header, results_bp_genome_header, results_bp_table);
 			current_ret_value = 0;
 			while (current_ret_value < len(bp_dists)):
-				# register_scores(simulated_dataset, reference_name, eval_scores, (current_ret_value*3 + 1), (current_ret_value*3 + 2), results_bp_dataset_header, results_bp_genome_header, results_bp_tables[i]);
 				register_scores(simulated_dataset, reference_name, eval_scores, current_ret_value, results_bp_dataset_headers[current_ret_value], results_bp_genome_headers[current_ret_value], results_bp_tables[current_ret_value]);
 				current_ret_value += 1;
 
@@ -244,7 +223,7 @@ if __name__ == "__main__":
 			num_processed_datasets += 1;
 			sys.stderr.write('====================================================\n');
 			
-		machine_num += 1;
+#		machine_num += 1;
 
 	# table_bp = convert_results_table(results_bp_dataset_header, results_bp_genome_header, results_bp_table);
 	# tables_bp = [convert_results_table(results_bp_dataset_header, results_bp_genome_header, results_bp_table) for results_bp_table in results_bp_tables]

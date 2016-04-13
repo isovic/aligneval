@@ -632,7 +632,7 @@ def GenerateNGSData(num_reads_to_generate=-1):
 	GenerateIllumina(REFERENCE_GENOMES_ROOT_ABS, 'saccharomyces_cerevisiae', read_length=150, fold_coverage=coverage_scerevisiae, mean_fragsize=0, std_fragsize=0, machine_name='Illumina' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	GenerateIllumina(REFERENCE_GENOMES_ROOT_ABS, 'caenorhabditis_elegans', read_length=150, fold_coverage=coverage_celegans, mean_fragsize=0, std_fragsize=0, machine_name='Illumina' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	GenerateIllumina(REFERENCE_GENOMES_ROOT_ABS, 'hg19_v38-chr3', read_length=150, fold_coverage=coverage_hg19v38chr3, mean_fragsize=0, std_fragsize=0, machine_name='Illumina' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
-	GenerateIllumina(REFERENCE_GENOMES_ROOT_ABS, 'hg19_v38', read_length=150, fold_coverage=coverage_hg19v38, mean_fragsize=0, std_fragsize=0, machine_name='Illumina' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
+	GenerateIllumina(REFERENCE_GENOMES_ROOT_ABS, 'hg19', read_length=150, fold_coverage=coverage_hg19v38, mean_fragsize=0, std_fragsize=0, machine_name='Illumina' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	
 	#Generate454(REFERENCE_GENOMES_ROOT_ABS, 'neisseria_meningitidis', fold_coverage=coverage_nmeni, mean_fragsize=0, std_fragsize=0, machine_name='Roche454' + machine_sufix);
 	#Generate454(REFERENCE_GENOMES_ROOT_ABS, 'escherichia_coli', fold_coverage=coverage_ecoli, mean_fragsize=0, std_fragsize=0, machine_name='Roche454' + machine_sufix);
@@ -665,7 +665,7 @@ def GeneratePacBioData(num_reads_to_generate=-1):
 		sys.stderr.write(('Coverage for hg19_v38-chr3: %d' % coverage_hg19v38chr3) + '\n');
 		machine_suffix = '-%dk' % (num_reads_to_generate / 1000);
 		coverage_hg19v38 = EstimateCoverageForNumReads(REFERENCE_GENOMES_ROOT_ABS, 'hg19_v38', mean_read_length, num_reads_to_generate) + 1;
-		sys.stderr.write(('Coverage for hg19_v38: %d' % coverage_hg19v38) + '\n');
+		sys.stderr.write(('Coverage for hg19: %d' % coverage_hg19v38) + '\n');
 		machine_suffix = '-%dk' % (num_reads_to_generate / 1000);
 		
 	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'neisseria_meningitidis', fold_coverage=coverage_nmeni, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
@@ -673,7 +673,7 @@ def GeneratePacBioData(num_reads_to_generate=-1):
 	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'saccharomyces_cerevisiae', fold_coverage=coverage_scerevisiae, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'caenorhabditis_elegans', fold_coverage=coverage_celegans, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'hg19_v38-chr3', fold_coverage=coverage_hg19v38chr3, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
-	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'hg19_v38', fold_coverage=coverage_hg19v38, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
+	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'hg19', fold_coverage=coverage_hg19v38, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	##############################
 
 def GenerateOxfordNanoporeDataObserved(num_reads_to_generate=-1):
@@ -685,7 +685,7 @@ def GenerateOxfordNanoporeDataObserved(num_reads_to_generate=-1):
 	GenerateOxfordNanoporeFromObservedStatistics('saccharomyces_cerevisiae', num_reads_to_generate=num_reads_to_generate);
 	GenerateOxfordNanoporeFromObservedStatistics('caenorhabditis_elegans', num_reads_to_generate=num_reads_to_generate);
 	GenerateOxfordNanoporeFromObservedStatistics('hg19_v38-chr3', num_reads_to_generate=num_reads_to_generate);
-	GenerateOxfordNanoporeFromObservedStatistics('hg19_v38', num_reads_to_generate=num_reads_to_generate);
+	GenerateOxfordNanoporeFromObservedStatistics('hg19', num_reads_to_generate=num_reads_to_generate);
 
 def GenerateOxfordNanoporeDataMarginAlign(num_reads_to_generate=-1):
 	##### OXFORD NANOPORE DATA #####

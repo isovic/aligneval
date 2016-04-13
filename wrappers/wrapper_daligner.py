@@ -259,13 +259,6 @@ def parse_memtime_files_and_accumulate(memtime_files, final_memtime_file):
 
 
 
-# Command line: /home/isovic/work/eclipse-workspace/git/aligneval/src/../tools/cgmemtime/cgmemtime -o /home/isovic/work/eclipse-workspace/git/aligneval/src/../evaluation/reads-simulated/OxfordNanopore-pbsim-observed_graphmap-1d-1k/saccharomyces_cerevisiae/GraphMap-v1.memtime /home/isovic/work/eclipse-workspace/git/aligneval/wrappers/../aligners/graphmap/bin/Linux-x64//graphmap -v 5 -t 4 -B 0 -b 3 -r /home/isovic/work/eclipse-workspace/git/aligneval/src/../reference-genomes/saccharomyces_cerevisiae.fa -d /home/isovic/work/eclipse-workspace/git/aligneval/src/../reads-simulated/OxfordNanopore-pbsim-observed_graphmap-1d-1k/saccharomyces_cerevisiae/reads.fa -o /home/isovic/work/eclipse-workspace/git/aligneval/src/../evaluation/reads-simulated/OxfordNanopore-pbsim-observed_graphmap-1d-1k/saccharomyces_cerevisiae/GraphMap-v1.sam
-# Real time:   18.164 s
-# CPU time:   61.911 s
-# User time:   54.086 s
-# System time:    7.825 s
-# Maximum RSS: 1327 MB
-
 def read_fastq(fastq_path):
 	headers = [];
 	seqs = [];
@@ -1112,6 +1105,10 @@ def download_and_install():
 
 	sys.stderr.write('[%s wrapper] Cloning git repository.\n' % (MAPPER_NAME));
 	command = 'cd %s/%s; git clone %s' % (ALIGNERS_PATH_ROOT_ABS_, MAPPER_NAME, ALIGNER_URL);
+	execute_command(command);
+
+	sys.stderr.write('[%s wrapper] Checking out commit d4aa487 used in the GraphMap paper.\n' % (MAPPER_NAME));
+	command = 'cd %s/%s/%s; git checkout d4aa487' % (ALIGNERS_PATH_ROOT_ABS_, MAPPER_NAME, MAPPER_NAME);
 	execute_command(command);
 
 	sys.stderr.write('[%s wrapper] Running make.\n' % (MAPPER_NAME));

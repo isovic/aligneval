@@ -14,9 +14,11 @@ import fastqparser;
 
 # ALIGNER_URL = 'http://last.cbrc.jp/last-534.zip';
 ALIGNER_URL = 'http://last.cbrc.jp/last-475.zip';
+ALIGNER_URL = 'http://last.cbrc.jp/last-744.zip';
 
 # ALIGNER_PATH = SCRIPT_PATH + '/../aligners/last-534/src';
 ALIGNER_PATH = SCRIPT_PATH + '/../aligners/last-475/src';
+ALIGNER_PATH = SCRIPT_PATH + '/../aligners/last-744/src';
 BIN = 'lastal';
 MAPPER_NAME = 'LAST';
 
@@ -110,7 +112,9 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 
 	# Run the alignment process, and measure execution time and memory.
 	sys.stderr.write('[%s wrapper] Running %s...\n' % (MAPPER_NAME, MAPPER_NAME));
-	command = '%s %s/%s %s %s %s > %s' % (basicdefines.measure_command(memtime_file), ALIGNER_PATH, BIN, parameters, reference_db_file, reads_fasta, maf_file);
+#	command = '%s %s/%s %s %s %s > %s' % (basicdefines.measure_command(memtime_file), ALIGNER_PATH, BIN, parameters, reference_db_file, reads_fasta, maf_file);
+	command = '%s bash %s/../scripts/parallel-fastq -j %d "%s/%s %s %s" < %s > %s' % (basicdefines.measure_command(memtime_file), ALIGNER_PATH, num_threads, ALIGNER_PATH, BIN, parameters, reference_db_file, reads_fasta, maf_file);
+# parallel-fastq "lastal -Q1 -e120 chr19 | last-split" < melanoma.fastq > m.maf
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
 	subprocess.call(command, shell=True);
 	sys.stderr.write('\n\n');
@@ -119,7 +123,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	fp = open(sam_file, 'w');
 	fp.write(get_sam_header(reference_file));
 	fp.close();
-	command = '%s %s/../scripts/maf-convert.py sam %s >> %s' % (basicdefines.measure_command(memtime_file_maftosam), ALIGNER_PATH, maf_file, sam_file);
+	command = '%s %s/../scripts/maf-convert sam %s >> %s' % (basicdefines.measure_command(memtime_file_maftosam), ALIGNER_PATH, maf_file, sam_file);
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
 	subprocess.call(command, shell=True);
 	sys.stderr.write('\n\n');
@@ -143,7 +147,7 @@ def run(reads_file, reference_file, machine_name, output_path, output_suffix='')
 	fp = open(sam_file_last_split, 'w');
 	fp.write(get_sam_header(reference_file));
 	fp.close();
-	command = '%s/../scripts/maf-convert.py sam %s >> %s' % (ALIGNER_PATH, maf_file_last_split, sam_file_last_split);
+	command = '%s/../scripts/maf-convert sam %s >> %s' % (ALIGNER_PATH, maf_file_last_split, sam_file_last_split);
 	sys.stderr.write('[%s wrapper] %s\n' % (MAPPER_NAME, command));
 	subprocess.call(command, shell=True);
 	sys.stderr.write('\n\n');

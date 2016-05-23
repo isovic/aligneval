@@ -85,7 +85,8 @@ def execute_command(command):
 	return [out, err, returncode];
 
 def measure_command(measure_file):
-        return (SCRIPT_PATH + r'/../tools/cgmemtime/cgmemtime -o ' + measure_file + ' ');
+#        return (SCRIPT_PATH + r'/../tools/cgmemtime/cgmemtime -o ' + measure_file + ' ');
+        return '/usr/bin/time --format "Command line: %%C\\nReal time: %%e s\\nCPU time: -1.0 s\\nUser time: %%U s\\nSystem time: %%S s\\nMaximum RSS: %%M kB\\nExit status: %%x" --quiet -o %s ' % measure_file;
 
 def setup_measure_command():
 	### Run a simple measure to try and see if the Cgroups was initialized.
@@ -105,4 +106,5 @@ def setup_measure_command():
 
 
 if __name__ == '__main__':
-	pass;
+#	pass;
+	setup_measure_command();

@@ -1,8 +1,8 @@
 #! /bin/sh
 
 # gm=../../graphmap/bin/Linux-x64/graphmap
-gm=../../graphmap/bin/graphmap-not_release
-gmspliced=../../graphmap-spliced/bin/graphmap-not_release
+gm=mappers/graphmap/bin/graphmap-not_release
+gmspliced=mappers/graphmap-spliced/bin/graphmap-not_release
 
 ### Coverage 20x
 # ref=reference-genomes/scerevisiae_S288c_with_mito_uppercase.fna
@@ -25,7 +25,7 @@ echo "	$gm align -r $ref --gtf $gtf -d $reads -o ${out}.sam --extcigar 2>&1 | te
 ### Run GraphMap on erroneous simulated reads with spliced approach.
 out=$folder/graphmap-spliced-rna-v1
 # /usr/bin/time --format "Command line: %C\nReal time: %e s\nCPU time: -1.0 s\nUser time: %U s\nSystem time: %S s\nMaximum RSS: %M kB\nExit status: %x" --quiet -o ${out}.memtime \
-# 	$gmspliced align --approach spliced -r $ref -d $reads -o ${out}.sam --extcigar 2>&1 | tee ${out}.tee
+echo " 	$gmspliced align --approach spliced -r $ref -d $reads -o ${out}.sam --extcigar 2>&1 | tee ${out}.tee"
 
 ### Evaluate the results.
 # ./run-evaluation-trans.py rna-v1

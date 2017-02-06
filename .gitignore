@@ -52,3 +52,5 @@ cachegrind*
 callgrind*
 *.txt
 results1/
+
+mappers/

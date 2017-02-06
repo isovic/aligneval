@@ -16,6 +16,13 @@ genomes.append('caenorhabditis_elegans');
 genomes.append('hg19_v38-chr3');
 # genomes.append('hg19');
 
+simulated_trans_datasets = [];
+simulated_trans_datasets.append('PacBio-cov20');								machine_names.append('pacbio');
+simulated_trans_datasets.append('PacBio-10k');								machine_names.append('pacbio');
+simulated_trans = [];
+simulated_trans.append('transcriptome_scerevisiae_graphmap_minlen100');
+
+
 
 simulated_datasets_grid = [];
 machine_names_grid = [];

@@ -11,6 +11,9 @@ import numpy as np;
 from basicdefines import *;
 import fastqparser;
 
+PBSIM_PATH = TOOLS_ROOT_ABS + '/PBSIM-PacBio-Simulator'; # '/pbsim-1.0.3-Linux-amd64';
+PBSIM_BIN = TOOLS_ROOT_ABS + '/PBSIM-PacBio-Simulator/src/bin/Debug/PBSIM'; # '/pbsim-1.0.3-Linux-amd64/Linux-amd64/bin/pbsim';
+
 
 
 def peek(fp, num_chars):
@@ -359,8 +362,8 @@ def GeneratePacBio(genome_path, genome_filename, fold_coverage=20, length_mean=3
 	complete_genome_path = genome_path + '/' + genome_filename + '.fa'
 	out_file_prefix = READS_SIMULATED_ROOT_ABS + '/' + machine_name + '/' + genome_filename + '/' + 'reads';
 	
-	simulator_path = TOOLS_ROOT_ABS + '/pbsim-1.0.3-Linux-amd64';
-	simulator_bin = TOOLS_ROOT_ABS + '/pbsim-1.0.3-Linux-amd64/Linux-amd64/bin/pbsim';
+	simulator_path = PBSIM_PATH;
+	simulator_bin = PBSIM_BIN;
 	
 	final_sam_file = out_file_prefix + '.sam';
 	fp = open(final_sam_file, 'w');
@@ -463,6 +466,8 @@ def GeneratePacBio(genome_path, genome_filename, fold_coverage=20, length_mean=3
 	# 	ExtractNAlignmentsFromSAM(out_file_prefix, num_reads_to_generate);
 	if (num_reads_to_generate > 0):
 		subsample_generated_reads(out_file_prefix, num_reads_to_generate);
+
+	return (out_file_prefix + '.sam');
 
 	#sam_files = glob.glob(out_file_prefix + '*.sam');
 	#sam_files = sorted(sam_files);
@@ -667,7 +672,7 @@ def GeneratePacBioData(num_reads_to_generate=-1):
 		coverage_hg19v38 = EstimateCoverageForNumReads(REFERENCE_GENOMES_ROOT_ABS, 'hg19_v38', mean_read_length, num_reads_to_generate) + 1;
 		sys.stderr.write(('Coverage for hg19: %d' % coverage_hg19v38) + '\n');
 		machine_suffix = '-%dk' % (num_reads_to_generate / 1000);
-		
+	
 	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'neisseria_meningitidis', fold_coverage=coverage_nmeni, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'escherichia_coli', fold_coverage=coverage_ecoli, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'saccharomyces_cerevisiae', fold_coverage=coverage_scerevisiae, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
@@ -675,6 +680,27 @@ def GeneratePacBioData(num_reads_to_generate=-1):
 	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'hg19_v38-chr3', fold_coverage=coverage_hg19v38chr3, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, 'hg19', fold_coverage=coverage_hg19v38, machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate);
 	##############################
+
+def GeneratePacBioDataFromReferences(references, num_reads_to_generate=-1):
+	coverage = {};
+	# ['neisseria_meningitidis', 'escherichia_coli', 'saccharomyces_cerevisiae', 'caenorhabditis_elegans', 'hg19_v38-chr3', 'hg19_v38']	
+
+	if (num_reads_to_generate <= 0):
+		machine_suffix = '-cov20';
+		for ref in references:
+			coverage[ref] = 20;
+	else:
+		machine_suffix = '-%dk' % (num_reads_to_generate / 1000);
+		mean_read_length = 1000;
+		for ref in references:
+			coverage[ref] = EstimateCoverageForNumReads(REFERENCE_GENOMES_ROOT_ABS, ref, mean_read_length, num_reads_to_generate) + 1;
+			sys.stderr.write(('Coverage for %s: %d' % (ref, coverage[ref])) + '\n');
+
+	sam_files = [];
+	for ref in references:
+		sam_files.append(GeneratePacBio(REFERENCE_GENOMES_ROOT_ABS, ref, fold_coverage=coverage[ref], machine_name='PacBio' + machine_suffix, num_reads_to_generate=num_reads_to_generate, length_min=10));
+	##############################
+	return sam_files;
 
 def GenerateOxfordNanoporeDataObserved(num_reads_to_generate=-1):
 	##### OXFORD NANOPORE DATA #####
@@ -744,7 +770,30 @@ def GenerateAll():
 	# 															accuracy_mean=(1.0 - 0.41), accuracy_sd=0.05, accuracy_min=(1.0 - 0.60), difference_ratio='51:11:38',
 	# 															machine_name='OxfordNanopore-pbsim-observed_last-1d' + machine_suffix, num_reads_to_generate=-1);
 
+def GenerateTranscriptomeReads():
 
+	refs = ['transcriptome_scerevisiae_graphmap_minlen100'];
+	gtf_for_refs = {'transcriptome_scerevisiae_graphmap_minlen100': 'scerevisiae.gtf'};
+
+	num_reads_to_generate = 10000;
+	sam_files = GeneratePacBioDataFromReferences(refs, num_reads_to_generate);
+
+	print sam_files;
+
+	### Convert the SAM files from transcriptome space to genome space.
+	for i in xrange(0, len(sam_files)):
+		sam_file = sam_files[i];
+		ref = refs[i];
+		trans_sam_file = os.path.splitext(sam_file)[0] + '.trans.sam';
+		gtf_file = 'reference-genomes/%s' % (gtf_for_refs[ref]);
+
+		shell_command = 'mv %s %s' % (sam_file, trans_sam_file);
+		sys.stderr.write(('Executing command: "%s"\n\n' % shell_command));
+		subprocess.call(shell_command, shell=True);
+
+		shell_command = 'python src/RnaSeq/src/transToGenome.py %s %s %s' % (trans_sam_file, gtf_file, sam_file);
+		sys.stderr.write(('Executing command: "%s"\n\n' % shell_command));
+		subprocess.call(shell_command, shell=True);
 
 def Main():
 	GenerateAll();

@@ -149,6 +149,7 @@ def setup_tools():
 
 	sys.stderr.write('Downloading and unpacking PBsim.\n');
 	command = 'cd %s; wget http://pbsim.googlecode.com/files/pbsim-1.0.3-Linux-amd64.tar.gz; tar -xzvf pbsim-1.0.3-Linux-amd64.tar.gz' % (basicdefines.TOOLS_ROOT_ABS);
+	command = 'cd %s; git clone https://github.com/pfaucon/PBSIM-PacBio-Simulator.git; cd PBSIM-PacBio-Simulator; ./configure && make' % (basicdefines.TOOLS_ROOT_ABS);
 	subprocess.call(command, shell='True');
 	sys.stderr.write('\n');
 
@@ -164,7 +165,7 @@ def verbose_usage_and_exit():
 	sys.stderr.write('\t%s [mode]\n' % sys.argv[0]);
 	sys.stderr.write('\n');
 	sys.stderr.write('\tParameter mode specifies which step to execute.\n');
-	sys.stderr.write('\t- mode - "all", "folders", "references", "aligners", "tools", "simdata" or "generate-simdata".\n');
+	sys.stderr.write('\t- mode - "all", "folders", "references", "aligners", "tools", "simdata", "generate-simdata" or "generate-trans".\n');
 	sys.stderr.write('\n');
 	exit(0);
 
@@ -215,6 +216,11 @@ if __name__ == '__main__':
 	if (mode == 'generate-simdata'):
 		sys.stderr.write('Please make sure you ran "./setup tools" and "./setup references"  prior to running this command.\n\n');
 		generate_data.GenerateAll();
+		mode_valid = True;
+
+	if (mode == 'generate-trans'):
+		sys.stderr.write('Please make sure you ran "./setup tools" and "./setup references"  prior to running this command.\n\n');
+		generate_data.GenerateTranscriptomeReads();
 		mode_valid = True;
 
 	if (mode_valid == False):
